@@ -1,0 +1,136 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/components/ui/use-toast'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Loader2, Lock, Mail, Building2 } from 'lucide-react'
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+  const { toast } = useToast()
+  const supabase = createClient()
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (error) {
+      toast({
+        title: 'Error de autenticación',
+        description: error.message === 'Invalid login credentials'
+          ? 'Correo o contraseña incorrectos'
+          : error.message,
+        variant: 'destructive',
+      })
+      setLoading(false)
+      return
+    }
+
+    router.push('/dashboard')
+    router.refresh()
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 relative overflow-hidden">
+      {/* Decoración de fondo */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-600 rounded-full opacity-20 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500 rounded-full opacity-20 blur-3xl" />
+        <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-blue-700 rounded-full opacity-10 blur-3xl" />
+      </div>
+
+      {/* Card de login */}
+      <div className="relative z-10 w-full max-w-md mx-4">
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-800 to-blue-600 px-8 py-10 text-center">
+            <div className="flex items-center justify-center mb-4">
+              <div className="bg-white bg-opacity-20 rounded-xl p-3">
+                <Building2 className="h-10 w-10 text-white" />
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">MELAN Services</h1>
+            <p className="text-blue-100 text-sm mt-1">Sistema de Gestión de Licitaciones</p>
+          </div>
+
+          {/* Formulario */}
+          <div className="px-8 py-8">
+            <h2 className="text-xl font-semibold text-gray-800 mb-1">Iniciar sesión</h2>
+            <p className="text-sm text-gray-500 mb-6">Ingresa tus credenciales para acceder</p>
+
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-gray-700 font-medium">
+                  Correo electrónico
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="usuario@melan.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-gray-700 font-medium">
+                  Contraseña
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full h-11 bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Ingresando...
+                  </>
+                ) : (
+                  'Ingresar al sistema'
+                )}
+              </Button>
+            </form>
+          </div>
+
+          {/* Footer */}
+          <div className="px-8 pb-6 text-center">
+            <p className="text-xs text-gray-400">
+              © {new Date().getFullYear()} MELAN Services · Todos los derechos reservados
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
