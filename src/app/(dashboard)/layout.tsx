@@ -10,11 +10,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect('/login')
 
   // Obtener perfil del usuario
-  const { data: profile } = await supabase
+  const { data: profileData } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .single()
+
+  // Garantizar que el email del perfil esté disponible como fallback
+  const profile = profileData
+    ? { ...profileData, email: profileData.email || user.email || '' }
+    : null
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">

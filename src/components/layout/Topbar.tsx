@@ -56,11 +56,11 @@ export function Topbar({ userProfile }: TopbarProps) {
 
         <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
           <div className="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center text-white text-sm font-bold">
-            {userProfile?.full_name?.charAt(0)?.toUpperCase() ?? 'U'}
+            {(userProfile?.full_name || userProfile?.email)?.charAt(0)?.toUpperCase() ?? 'U'}
           </div>
           <div className="hidden sm:block">
             <p className="text-sm font-medium text-gray-800 leading-tight">
-              {userProfile?.full_name ?? 'Usuario'}
+              {userProfile?.full_name || userProfile?.email || 'Usuario'}
             </p>
             <p className="text-xs text-gray-500 leading-tight capitalize">{userProfile?.role}</p>
           </div>
