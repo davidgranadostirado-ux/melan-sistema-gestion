@@ -35,7 +35,7 @@ const EMPTY_FORM: ProcesoFormData = {
   estado_proceso: 'Pendiente',
   departamento_ejecucion: '',
   municipio_ejecucion: '',
-  cuantia_proceso: '',
+  cuantia_proceso: 0,
   objeto_proceso: '',
   tipo_proceso: '',
   numero_proceso: '',
@@ -43,10 +43,10 @@ const EMPTY_FORM: ProcesoFormData = {
   contacto_proceso: '',
   fecha_inicio: '',
   fecha_terminacion: '',
-  duracion_dias: '',
+  duracion_dias: 0,
   proponente_ganador: '',
-  valor_ofertado_ganador: '',
-  valor_ofertado_sumicorp: '',
+  valor_ofertado_ganador: 0,
+  valor_ofertado_sumicorp: 0,
   sumicorp_cumple: 'PENDIENTE',
   gestion_realizar: '',
   participa: 'SI',
@@ -64,10 +64,10 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
     if (proceso) {
       setForm({
         ...proceso,
-        cuantia_proceso: proceso.cuantia_proceso ?? '',
-        duracion_dias: proceso.duracion_dias ?? '',
-        valor_ofertado_ganador: proceso.valor_ofertado_ganador ?? '',
-        valor_ofertado_sumicorp: proceso.valor_ofertado_sumicorp ?? '',
+        cuantia_proceso: proceso.cuantia_proceso ?? 0,
+        duracion_dias: proceso.duracion_dias ?? 0,
+        valor_ofertado_ganador: proceso.valor_ofertado_ganador ?? 0,
+        valor_ofertado_sumicorp: proceso.valor_ofertado_sumicorp ?? 0,
       })
     } else {
       setForm(EMPTY_FORM)
@@ -105,10 +105,10 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
 
     const payload = {
       ...form,
-      cuantia_proceso: form.cuantia_proceso ? Number(String(form.cuantia_proceso).replace(/\D/g, '')) : 0,
-      duracion_dias: form.duracion_dias ? Number(form.duracion_dias) : null,
-      valor_ofertado_ganador: form.valor_ofertado_ganador ? Number(String(form.valor_ofertado_ganador).replace(/\D/g, '')) : null,
-      valor_ofertado_sumicorp: form.valor_ofertado_sumicorp ? Number(String(form.valor_ofertado_sumicorp).replace(/\D/g, '')) : null,
+      cuantia_proceso: form.cuantia_proceso || 0,
+      duracion_dias: form.duracion_dias || null,
+      valor_ofertado_ganador: form.valor_ofertado_ganador || null,
+      valor_ofertado_sumicorp: form.valor_ofertado_sumicorp || null,
       año_publicacion: form.año_publicacion ? Number(form.año_publicacion) : null,
       // Limpiar campos vacíos
       fecha_presentacion: form.fecha_presentacion || null,
@@ -291,8 +291,8 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
               <Field label="Cuantía del Proceso (COP)" required>
                 <Input
                   type="number"
-                  value={form.cuantia_proceso as string}
-                  onChange={(e) => handleChange('cuantia_proceso', e.target.value)}
+                  value={form.cuantia_proceso}
+                  onChange={(e) => handleChange('cuantia_proceso', e.target.valueAsNumber || 0)}
                   placeholder="0"
                   min="0"
                   required
@@ -308,7 +308,7 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
               </Field>
 
               <Field label="Duración (días, auto)">
-                <Input type="number" value={form.duracion_dias as string} onChange={(e) => handleChange('duracion_dias', e.target.value)} placeholder="Se calcula automáticamente" />
+                <Input type="number" value={form.duracion_dias} onChange={(e) => handleChange('duracion_dias', e.target.valueAsNumber || 0)} placeholder="Se calcula automáticamente" />
               </Field>
             </div>
           </Section>
@@ -321,11 +321,11 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
               </Field>
 
               <Field label="Valor Ofertado Ganador (COP)">
-                <Input type="number" value={form.valor_ofertado_ganador as string} onChange={(e) => handleChange('valor_ofertado_ganador', e.target.value)} placeholder="0" min="0" />
+                <Input type="number" value={form.valor_ofertado_ganador} onChange={(e) => handleChange('valor_ofertado_ganador', e.target.valueAsNumber || 0)} placeholder="0" min="0" />
               </Field>
 
               <Field label="Valor Ofertado SUMICORP (COP)">
-                <Input type="number" value={form.valor_ofertado_sumicorp as string} onChange={(e) => handleChange('valor_ofertado_sumicorp', e.target.value)} placeholder="0" min="0" />
+                <Input type="number" value={form.valor_ofertado_sumicorp} onChange={(e) => handleChange('valor_ofertado_sumicorp', e.target.valueAsNumber || 0)} placeholder="0" min="0" />
               </Field>
 
               <Field label="SUMICORP Cumple">
