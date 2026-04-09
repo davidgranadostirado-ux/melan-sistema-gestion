@@ -51,6 +51,7 @@ const EMPTY_FORM: ProcesoFormData = {
   gestion_realizar: '',
   participa: 'SI',
   observaciones: '',
+  fecha_cargue: '',
 }
 
 export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoFormModalProps) {
@@ -123,6 +124,7 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
       proponente_ganador: form.proponente_ganador || null,
       gestion_realizar: form.gestion_realizar || null,
       observaciones: form.observaciones || null,
+      fecha_cargue: form.fecha_cargue || null,
     }
 
     let error
@@ -237,6 +239,15 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
                     <SelectItem value="NO">NO</SelectItem>
                   </SelectContent>
                 </Select>
+              </Field>
+
+              <Field label="Fecha de Cargue al CRM">
+                <Input
+                  type="date"
+                  value={form.fecha_cargue as string ?? ''}
+                  onChange={(e) => handleChange('fecha_cargue', e.target.value)}
+                  placeholder="Fecha en que se cargó al sistema"
+                />
               </Field>
             </div>
 

@@ -20,7 +20,7 @@ interface ProcesosTableProps {
 
 const ESTADOS: EstadoProceso[] = ['En Evaluación', 'Adjudicado', 'Cancelado', 'Desierto', 'Borrador', 'Pendiente']
 const SECTORES = ['Público', 'Privado']
-const AÑOS = ['Todos', '2025', '2024', '2023']
+const AÑOS = ['Todos', '2026', '2025', '2024', '2023']
 const PAGE_SIZE = 10
 
 export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
@@ -105,6 +105,7 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
       'Participa': p.participa ?? '',
       'Proponente Ganador': p.proponente_ganador ?? '',
       'Valor SUMICORP': p.valor_ofertado_sumicorp ?? '',
+      'Fecha Cargue CRM': p.fecha_cargue ?? '',
     }))
     exportToCSV(data, `procesos-melan-${new Date().toISOString().split('T')[0]}`)
     toast({ title: 'CSV exportado', description: `${filtered.length} registros exportados.` })
@@ -197,13 +198,14 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Estado</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Cuantía</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Fecha Pub.</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Fecha Cargue</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-16 text-center">
+                  <td colSpan={8} className="px-4 py-16 text-center">
                     <div className="text-5xl mb-3">🔍</div>
                     <p className="text-gray-500 font-medium">No se encontraron procesos</p>
                     <p className="text-gray-400 text-sm mt-1">
@@ -240,6 +242,9 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
                     </td>
                     <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
                       {formatDate(proceso.fecha_publicacion)}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                      {proceso.fecha_cargue ? formatDate(proceso.fecha_cargue) : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">

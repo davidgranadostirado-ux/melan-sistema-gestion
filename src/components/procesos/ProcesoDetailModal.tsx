@@ -63,6 +63,7 @@ export function ProcesoDetailModal({ open, onClose, proceso }: ProcesoDetailModa
               <InfoRow label="Inicio" value={formatDate(proceso.fecha_inicio)} />
               <InfoRow label="Terminación" value={formatDate(proceso.fecha_terminacion)} />
               <InfoRow label="Duración" value={proceso.duracion_dias ? `${proceso.duracion_dias} días` : undefined} />
+              <InfoRow label="Cargue al CRM" value={formatDate(proceso.fecha_cargue)} />
             </InfoSection>
 
             {/* Localización */}
