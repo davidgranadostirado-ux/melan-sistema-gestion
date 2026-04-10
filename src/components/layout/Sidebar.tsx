@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, FileText, Award, BarChart3, Users, Building2, LogOut, X, Menu,
+  LayoutDashboard, FileText, Award, BarChart3, Users, LogOut, X, Menu,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -37,16 +37,16 @@ export function Sidebar({ userProfile }: SidebarProps) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="px-6 py-6 border-b border-gray-700">
-        <div className="flex items-center gap-3">
-          <div className="bg-blue-600 rounded-lg p-2">
-            <Building2 className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <p className="text-white font-bold text-sm leading-tight">MELAN Services</p>
-            <p className="text-gray-400 text-xs">Gestión de Licitaciones</p>
-          </div>
+      <div className="px-6 py-5 border-b border-gray-700">
+        <div className="bg-white rounded-xl px-3 py-2.5 flex items-center justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://www.melanservices.com/web/images/logo.svg"
+            alt="Melan Services"
+            className="h-9 w-auto object-contain"
+          />
         </div>
+        <p className="text-gray-400 text-xs text-center mt-2">Gestión de Licitaciones</p>
       </div>
 
       {/* Navegación */}

@@ -21,6 +21,7 @@ interface ProcesosTableProps {
 const ESTADOS: EstadoProceso[] = ['En Evaluación', 'Adjudicado', 'Cancelado', 'Desierto', 'Borrador', 'Pendiente']
 const SECTORES = ['Público', 'Privado']
 const AÑOS = ['Todos', '2026', '2025', '2024', '2023']
+const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
 const CATEGORIAS = ['INSUMOS DE ASEO','INSUMOS DE ASEO Y CAFETERIA','INSUMOS DE CAFETERIA','INSUMOS DE PAPELERÍA','INSUMOS DE PROTECCION PERSONAL','INSUMOS DEPORTIVOS','INSUMOS LUDICOS','SUMINISTRO DE ASEO','SUMINISTRO DE FERRETERÍA','SUMINISTRO DE HIGIENE','SUMINISTRO DE MERCADOS','SUMINISTRO DE TECNOLOGÍA','SUMINISTRO MOBILIARIO']
 const PAGE_SIZE = 10
 
@@ -30,6 +31,7 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
   const [filterAño, setFilterAño] = useState('Todos')
   const [filterEstado, setFilterEstado] = useState('Todos')
   const [filterSector, setFilterSector] = useState('Todos')
+  const [filterMes, setFilterMes] = useState('Todos')
   const [filterCategoria, setFilterCategoria] = useState('Todos')
   const [page, setPage] = useState(1)
   const [selectedProceso, setSelectedProceso] = useState<Proceso | null>(null)
@@ -56,22 +58,24 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
       const matchAño = filterAño === 'Todos' || String(p.año_publicacion) === filterAño
       const matchEstado = filterEstado === 'Todos' || p.estado_proceso === filterEstado
       const matchSector = filterSector === 'Todos' || p.sector === filterSector
+      const matchMes = filterMes === 'Todos' || (p.mes_publicacion ?? '').toUpperCase() === filterMes
       const matchCategoria = filterCategoria === 'Todos' || p.categoria === filterCategoria
 
-      return matchSearch && matchAño && matchEstado && matchSector && matchCategoria
+      return matchSearch && matchAño && matchEstado && matchSector && matchMes && matchCategoria
     })
   }, [procesos, search, filterAño, filterEstado, filterSector])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  const hasFilters = search || filterAño !== 'Todos' || filterEstado !== 'Todos' || filterSector !== 'Todos' || filterCategoria !== 'Todos'
+  const hasFilters = search || filterAño !== 'Todos' || filterEstado !== 'Todos' || filterSector !== 'Todos' || filterMes !== 'Todos' || filterCategoria !== 'Todos'
 
   const clearFilters = () => {
     setSearch('')
     setFilterAño('Todos')
     setFilterEstado('Todos')
     setFilterSector('Todos')
+    setFilterMes('Todos')
     setFilterCategoria('Todos')
     setPage(1)
   }
@@ -141,6 +145,16 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
               className="h-9 px-3 text-sm border border-gray-200 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {AÑOS.map((a) => <option key={a} value={a}>{a === 'Todos' ? 'Todos los años' : a}</option>)}
+            </select>
+
+            {/* Filtro Mes */}
+            <select
+              value={filterMes}
+              onChange={(e) => { setFilterMes(e.target.value); setPage(1) }}
+              className="h-9 px-3 text-sm border border-gray-200 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="Todos">Todos los meses</option>
+              {MESES.map((m) => <option key={m} value={m}>{m.charAt(0) + m.slice(1).toLowerCase()}</option>)}
             </select>
 
             {/* Filtro Estado */}
