@@ -256,6 +256,9 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
                       {proceso.numero_proceso && (
                         <p className="text-xs text-gray-500 font-mono">{proceso.numero_proceso}</p>
                       )}
+                      {proceso.created_by_name && (
+                        <p className="text-xs text-blue-500 mt-0.5">👤 {proceso.created_by_name}</p>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {proceso.categoria

@@ -306,7 +306,7 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
               <Field label="Cuantía del Proceso (COP)" required>
                 <Input
                   type="number"
-                  value={form.cuantia_proceso}
+                  value={form.cuantia_proceso || ''}
                   onChange={(e) => handleChange('cuantia_proceso', e.target.valueAsNumber || 0)}
                   placeholder="0"
                   min="0"
@@ -323,7 +323,7 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
               </Field>
 
               <Field label="Duración (días, auto)">
-                <Input type="number" value={form.duracion_dias} onChange={(e) => handleChange('duracion_dias', e.target.valueAsNumber || 0)} placeholder="Se calcula automáticamente" />
+                <Input type="number" value={form.duracion_dias || ''} onChange={(e) => handleChange('duracion_dias', e.target.valueAsNumber || 0)} placeholder="Se calcula automáticamente" />
               </Field>
             </div>
           </Section>
@@ -336,11 +336,11 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
               </Field>
 
               <Field label="Valor Ofertado Ganador (COP)">
-                <Input type="number" value={form.valor_ofertado_ganador} onChange={(e) => handleChange('valor_ofertado_ganador', e.target.valueAsNumber || 0)} placeholder="0" min="0" />
+                <Input type="number" value={form.valor_ofertado_ganador || ''} onChange={(e) => handleChange('valor_ofertado_ganador', e.target.valueAsNumber || 0)} placeholder="0" min="0" />
               </Field>
 
               <Field label="Valor Ofertado (COP)">
-                <Input type="number" value={form.valor_ofertado_sumicorp} onChange={(e) => handleChange('valor_ofertado_sumicorp', e.target.valueAsNumber || 0)} placeholder="0" min="0" />
+                <Input type="number" value={form.valor_ofertado_sumicorp || ''} onChange={(e) => handleChange('valor_ofertado_sumicorp', e.target.valueAsNumber || 0)} placeholder="0" min="0" />
               </Field>
 
               <Field label="Cumple">

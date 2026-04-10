@@ -55,6 +55,7 @@ export interface Proceso {
   created_at: string
   updated_at: string
   created_by?: string
+  created_by_name?: string   // nombre del usuario que lo cargó (join con profiles)
 }
 
 export type ProcesoFormData = Omit<Proceso, 'id' | 'created_at' | 'updated_at'>
