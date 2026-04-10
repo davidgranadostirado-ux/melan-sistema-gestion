@@ -154,15 +154,6 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
     onClose()
   }
 
-  const Field = ({ label, children, required }: { label: string; children: React.ReactNode; required?: boolean }) => (
-    <div className="space-y-1.5">
-      <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
-      </Label>
-      {children}
-    </div>
-  )
-
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
@@ -392,6 +383,17 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
         </form>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function Field({ label, children, required }: { label: string; children: React.ReactNode; required?: boolean }) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+      </Label>
+      {children}
+    </div>
   )
 }
 
