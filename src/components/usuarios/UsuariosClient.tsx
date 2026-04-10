@@ -8,9 +8,9 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { Profile, UserRole } from '@/types'
-import { Pencil, Users, Shield, Eye, Loader2, Trash2, UserPlus } from 'lucide-react'
+import { Pencil, Users, Shield, Eye, Loader2, Trash2, UserPlus, KeyRound } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
-import { inviteUser, deleteUser } from '@/app/actions/usuarios'
+import { createUser, deleteUser, updateUserPassword } from '@/app/actions/usuarios'
 
 interface UsuariosClientProps {
   usuarios: Profile[]
@@ -22,25 +22,58 @@ const ROLE_CONFIG = {
   viewer: { label: 'Visor',         color: 'bg-gray-100 text-gray-700', icon: Eye },
 }
 
-const EMPTY_INVITE = { email: '', full_name: '', role: 'viewer' as UserRole }
+const EMPTY_CREATE = { email: '', full_name: '', password: '', role: 'viewer' as UserRole }
 
 export function UsuariosClient({ usuarios: initialUsuarios }: UsuariosClientProps) {
   const [usuarios, setUsuarios] = useState<Profile[]>(initialUsuarios)
 
-  // Edit
-  const [editUser, setEditUser] = useState<Profile | null>(null)
-  const [newName, setNewName] = useState('')
-  const [newRole, setNewRole] = useState<UserRole>('viewer')
+  // Crear
+  const [showCreate, setShowCreate] = useState(false)
+  const [form, setForm]             = useState(EMPTY_CREATE)
+  const [showPass, setShowPass]     = useState(false)
 
-  // Invite
-  const [showInvite, setShowInvite] = useState(false)
-  const [invite, setInvite] = useState(EMPTY_INVITE)
+  // Editar
+  const [editUser, setEditUser]   = useState<Profile | null>(null)
+  const [newName, setNewName]     = useState('')
+  const [newRole, setNewRole]     = useState<UserRole>('viewer')
 
-  // Delete
+  // Cambiar contraseña
+  const [pwdUser, setPwdUser]         = useState<Profile | null>(null)
+  const [newPwd, setNewPwd]           = useState('')
+  const [showNewPwd, setShowNewPwd]   = useState(false)
+
+  // Eliminar
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
+
+  // ── Crear ────────────────────────────────────────────────
+  const handleCreate = async () => {
+    if (!form.email || !form.full_name || !form.password) {
+      toast({ title: 'Campos requeridos', description: 'Completa todos los campos obligatorios.', variant: 'destructive' })
+      return
+    }
+    if (form.password.length < 6) {
+      toast({ title: 'Contraseña muy corta', description: 'La contraseña debe tener al menos 6 caracteres.', variant: 'destructive' })
+      return
+    }
+    setLoading(true)
+    const result = await createUser(form.email, form.password, form.full_name, form.role)
+    setLoading(false)
+    if (result.error) { toast({ title: 'Error al crear usuario', description: result.error, variant: 'destructive' }); return }
+    setUsuarios((prev) => [...prev, {
+      id: result.userId!,
+      email: form.email,
+      full_name: form.full_name,
+      role: form.role,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }])
+    toast({ title: 'Usuario creado', description: `${form.full_name} puede iniciar sesión de inmediato.` })
+    setForm(EMPTY_CREATE)
+    setShowCreate(false)
+  }
 
   // ── Editar ──────────────────────────────────────────────
   const handleEdit = (user: Profile) => {
@@ -63,27 +96,20 @@ export function UsuariosClient({ usuarios: initialUsuarios }: UsuariosClientProp
     setEditUser(null)
   }
 
-  // ── Invitar ─────────────────────────────────────────────
-  const handleInvite = async () => {
-    if (!invite.email || !invite.full_name) {
-      toast({ title: 'Campos requeridos', description: 'Completa el correo y el nombre.', variant: 'destructive' })
+  // ── Cambiar contraseña ────────────────────────────────────
+  const handleChangePwd = async () => {
+    if (!pwdUser || !newPwd) return
+    if (newPwd.length < 6) {
+      toast({ title: 'Contraseña muy corta', description: 'Mínimo 6 caracteres.', variant: 'destructive' })
       return
     }
     setLoading(true)
-    const result = await inviteUser(invite.email, invite.full_name, invite.role)
+    const result = await updateUserPassword(pwdUser.id, newPwd)
     setLoading(false)
-    if (result.error) { toast({ title: 'Error al invitar', description: result.error, variant: 'destructive' }); return }
-    setUsuarios((prev) => [...prev, {
-      id: result.userId!,
-      email: invite.email,
-      full_name: invite.full_name,
-      role: invite.role as UserRole,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }])
-    toast({ title: 'Invitación enviada', description: `Se envió un correo de invitación a ${invite.email}.` })
-    setInvite(EMPTY_INVITE)
-    setShowInvite(false)
+    if (result.error) { toast({ title: 'Error', description: result.error, variant: 'destructive' }); return }
+    toast({ title: 'Contraseña actualizada', description: `La contraseña de ${pwdUser.full_name} fue cambiada.` })
+    setPwdUser(null)
+    setNewPwd('')
   }
 
   // ── Eliminar ─────────────────────────────────────────────
@@ -126,8 +152,8 @@ export function UsuariosClient({ usuarios: initialUsuarios }: UsuariosClientProp
               <h3 className="font-semibold text-gray-800">Usuarios del Sistema</h3>
               <span className="text-sm text-gray-400">({usuarios.length} usuarios)</span>
             </div>
-            <Button onClick={() => setShowInvite(true)} className="bg-blue-700 hover:bg-blue-800 gap-2 text-sm">
-              <UserPlus className="h-4 w-4" /> Invitar Usuario
+            <Button onClick={() => setShowCreate(true)} className="bg-blue-700 hover:bg-blue-800 gap-2 text-sm">
+              <UserPlus className="h-4 w-4" /> Nuevo Usuario
             </Button>
           </div>
 
@@ -164,8 +190,11 @@ export function UsuariosClient({ usuarios: initialUsuarios }: UsuariosClientProp
                       <td className="px-5 py-4 text-gray-500">{formatDate(user.created_at?.split('T')[0])}</td>
                       <td className="px-5 py-4 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <button onClick={() => handleEdit(user)} className="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded transition-colors" title="Editar">
+                          <button onClick={() => handleEdit(user)} className="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded transition-colors" title="Editar nombre y rol">
                             <Pencil className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => { setPwdUser(user); setNewPwd('') }} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Cambiar contraseña">
+                            <KeyRound className="h-4 w-4" />
                           </button>
                           {deleteConfirm === user.id ? (
                             <div className="flex items-center gap-1">
@@ -191,6 +220,62 @@ export function UsuariosClient({ usuarios: initialUsuarios }: UsuariosClientProp
           </div>
         </div>
       </div>
+
+      {/* Modal crear usuario */}
+      <Dialog open={showCreate} onOpenChange={(o) => { if (!o) { setShowCreate(false); setForm(EMPTY_CREATE) } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Crear Nuevo Usuario</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Nombre completo <span className="text-red-500">*</span></Label>
+              <Input placeholder="Nombre del usuario" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Correo electrónico <span className="text-red-500">*</span></Label>
+              <Input type="email" placeholder="correo@empresa.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Contraseña <span className="text-red-500">*</span></Label>
+              <div className="relative">
+                <Input
+                  type={showPass ? 'text' : 'password'}
+                  placeholder="Mínimo 6 caracteres"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  className="pr-16"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  {showPass ? 'Ocultar' : 'Ver'}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Rol en el sistema</Label>
+              <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as UserRole })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Administrador — acceso total</SelectItem>
+                  <SelectItem value="editor">Editor — crear y editar procesos</SelectItem>
+                  <SelectItem value="viewer">Visor — solo lectura</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs text-gray-500 bg-green-50 border border-green-200 rounded-lg p-2.5">
+              ✓ El usuario podrá iniciar sesión de inmediato con estas credenciales, sin necesidad de confirmar su correo.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowCreate(false); setForm(EMPTY_CREATE) }}>Cancelar</Button>
+            <Button onClick={handleCreate} disabled={loading} className="bg-blue-700 hover:bg-blue-800">
+              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creando...</> : <><UserPlus className="mr-2 h-4 w-4" />Crear usuario</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal editar */}
       <Dialog open={!!editUser} onOpenChange={(o) => !o && setEditUser(null)}>
@@ -222,36 +307,40 @@ export function UsuariosClient({ usuarios: initialUsuarios }: UsuariosClientProp
         </DialogContent>
       </Dialog>
 
-      {/* Modal invitar */}
-      <Dialog open={showInvite} onOpenChange={(o) => !o && setShowInvite(false)}>
+      {/* Modal cambiar contraseña */}
+      <Dialog open={!!pwdUser} onOpenChange={(o) => { if (!o) { setPwdUser(null); setNewPwd('') } }}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Invitar Nuevo Usuario</DialogTitle></DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>Correo electrónico <span className="text-red-500">*</span></Label>
-              <Input type="email" placeholder="correo@empresa.com" value={invite.email} onChange={(e) => setInvite({ ...invite, email: e.target.value })} />
+          <DialogHeader><DialogTitle>Cambiar Contraseña</DialogTitle></DialogHeader>
+          {pwdUser && (
+            <div className="space-y-4 py-2">
+              <p className="text-sm text-gray-600">
+                Establecer nueva contraseña para <span className="font-semibold">{pwdUser.full_name}</span>
+              </p>
+              <div className="space-y-2">
+                <Label>Nueva contraseña</Label>
+                <div className="relative">
+                  <Input
+                    type={showNewPwd ? 'text' : 'password'}
+                    placeholder="Mínimo 6 caracteres"
+                    value={newPwd}
+                    onChange={(e) => setNewPwd(e.target.value)}
+                    className="pr-16"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPwd(!showNewPwd)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    {showNewPwd ? 'Ocultar' : 'Ver'}
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Nombre completo <span className="text-red-500">*</span></Label>
-              <Input placeholder="Nombre del usuario" value={invite.full_name} onChange={(e) => setInvite({ ...invite, full_name: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Rol en el sistema</Label>
-              <Select value={invite.role} onValueChange={(v) => setInvite({ ...invite, role: v as UserRole })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Administrador — acceso total</SelectItem>
-                  <SelectItem value="editor">Editor — crear y editar procesos</SelectItem>
-                  <SelectItem value="viewer">Visor — solo lectura</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <p className="text-xs text-gray-500">Se enviará un correo de invitación para que el usuario configure su contraseña.</p>
-          </div>
+          )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowInvite(false)}>Cancelar</Button>
-            <Button onClick={handleInvite} disabled={loading} className="bg-blue-700 hover:bg-blue-800">
-              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Enviando...</> : <><UserPlus className="mr-2 h-4 w-4" />Enviar invitación</>}
+            <Button variant="outline" onClick={() => { setPwdUser(null); setNewPwd('') }}>Cancelar</Button>
+            <Button onClick={handleChangePwd} disabled={loading} className="bg-blue-700 hover:bg-blue-800">
+              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Guardando...</> : <><KeyRound className="mr-2 h-4 w-4" />Cambiar contraseña</>}
             </Button>
           </DialogFooter>
         </DialogContent>
