@@ -63,7 +63,7 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
 
       return matchSearch && matchAño && matchEstado && matchSector && matchMes && matchCategoria
     })
-  }, [procesos, search, filterAño, filterEstado, filterSector])
+  }, [procesos, search, filterAño, filterEstado, filterSector, filterMes, filterCategoria])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
