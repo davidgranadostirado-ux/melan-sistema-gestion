@@ -54,12 +54,23 @@ export default function LoginPage() {
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-800 to-blue-600 px-8 py-10 text-center">
             <div className="flex items-center justify-center mb-6">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://www.melanservices.com/web/images/logo.svg"
-                alt="Melan Services"
-                className="h-14 w-auto object-contain"
-              />
+              <svg width="170" height="52" viewBox="0 0 170 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Melan Services">
+                {/* Icon */}
+                <polygon points="20,2 36,11 36,29 20,38 4,29 4,11" fill="#1e3a6e"/>
+                <polygon points="20,7 31,13 31,27 20,33 9,27 9,13" fill="#2a5298"/>
+                <text x="13" y="26" fontFamily="Arial Black,sans-serif" fontSize="14" fontWeight="900" fill="white">M</text>
+                <polygon points="4,11 0,16 4,21" fill="#e8612a" opacity="0.9"/>
+                <polygon points="4,21 0,26 4,29" fill="#e8612a" opacity="0.7"/>
+                {/* MELAN */}
+                <text fontFamily="Arial Black,sans-serif" fontSize="22" fontWeight="900" y="28" letterSpacing="1">
+                  <tspan x="44" fill="#1e3a6e">M</tspan>
+                  <tspan fill="#c8d6e8">E</tspan>
+                  <tspan fill="#1e3a6e">L</tspan>
+                  <tspan fill="#c8d6e8">AN</tspan>
+                </text>
+                {/* SERVICES */}
+                <text x="44" y="44" fontFamily="Arial,sans-serif" fontSize="11" fontWeight="700" letterSpacing="3.5" fill="#c8d6e8">SERVICES</text>
+              </svg>
             </div>
             <p className="text-blue-100 text-sm mt-1">Sistema de Gestión de Licitaciones</p>
           </div>
