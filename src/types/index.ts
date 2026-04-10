@@ -50,6 +50,7 @@ export interface Proceso {
   gestion_realizar?: string
   participa?: Participa
   observaciones?: string
+  categoria?: string
   fecha_cargue?: string
   created_at: string
   updated_at: string

@@ -52,6 +52,19 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
     .slice(0, 8)
     .map(([name, value]) => ({ name: name.length > 20 ? name.slice(0, 20) + '…' : name, value }))
 
+  // Por categoría
+  const categoriaData = Object.entries(
+    procesos
+      .filter((p) => p.categoria)
+      .reduce<Record<string, number>>((acc, p) => {
+        const cat = p.categoria!
+        acc[cat] = (acc[cat] || 0) + 1
+        return acc
+      }, {})
+  )
+    .sort(([, a], [, b]) => b - a)
+    .map(([name, value]) => ({ name: name.length > 24 ? name.slice(0, 24) + '…' : name, value }))
+
   // Por año
   const añoData = Object.entries(
     procesos
@@ -116,6 +129,22 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
               <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 10 }} />
               <Tooltip formatter={(v: number) => [v, 'Procesos']} />
               <Bar dataKey="value" name="Procesos" fill="#1a56db" radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
+      {/* Por Categoría */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm xl:col-span-2">
+        <h3 className="text-base font-semibold text-gray-800 mb-4">Procesos por Categoría</h3>
+        {categoriaData.length === 0 ? <EmptyChart /> : (
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={categoriaData} layout="vertical" barSize={18}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
+              <YAxis type="category" dataKey="name" width={200} tick={{ fontSize: 10 }} />
+              <Tooltip formatter={(v: number) => [v, 'Procesos']} />
+              <Bar dataKey="value" name="Procesos" fill="#7c3aed" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}

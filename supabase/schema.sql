@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS public.procesos (
   gestion_realizar          TEXT,
   participa                 TEXT DEFAULT 'SI' CHECK (participa IN ('SI', 'NO')),
   observaciones             TEXT,
+  categoria                 TEXT,
   fecha_cargue              DATE,
 
   -- Auditoría

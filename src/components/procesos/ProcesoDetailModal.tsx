@@ -49,6 +49,7 @@ export function ProcesoDetailModal({ open, onClose, proceso }: ProcesoDetailModa
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* Información General */}
             <InfoSection title="Información General" icon={<FileText className="h-4 w-4" />}>
+              <InfoRow label="Categoría" value={proceso.categoria} />
               <InfoRow label="Tipo" value={proceso.tipo_proceso} />
               <InfoRow label="Año" value={proceso.año_publicacion} />
               <InfoRow label="Fuente" value={proceso.fuente} />

@@ -21,6 +21,7 @@ interface ProcesosTableProps {
 const ESTADOS: EstadoProceso[] = ['En Evaluación', 'Adjudicado', 'Cancelado', 'Desierto', 'Borrador', 'Pendiente']
 const SECTORES = ['Público', 'Privado']
 const AÑOS = ['Todos', '2026', '2025', '2024', '2023']
+const CATEGORIAS = ['INSUMOS DE ASEO','INSUMOS DE ASEO Y CAFETERIA','INSUMOS DE CAFETERIA','INSUMOS DE PAPELERÍA','INSUMOS DE PROTECCION PERSONAL','INSUMOS DEPORTIVOS','INSUMOS LUDICOS','SUMINISTRO DE ASEO','SUMINISTRO DE FERRETERÍA','SUMINISTRO DE HIGIENE','SUMINISTRO DE MERCADOS','SUMINISTRO DE TECNOLOGÍA','SUMINISTRO MOBILIARIO']
 const PAGE_SIZE = 10
 
 export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
@@ -29,6 +30,7 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
   const [filterAño, setFilterAño] = useState('Todos')
   const [filterEstado, setFilterEstado] = useState('Todos')
   const [filterSector, setFilterSector] = useState('Todos')
+  const [filterCategoria, setFilterCategoria] = useState('Todos')
   const [page, setPage] = useState(1)
   const [selectedProceso, setSelectedProceso] = useState<Proceso | null>(null)
   const [viewProceso, setViewProceso] = useState<Proceso | null>(null)
@@ -54,21 +56,23 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
       const matchAño = filterAño === 'Todos' || String(p.año_publicacion) === filterAño
       const matchEstado = filterEstado === 'Todos' || p.estado_proceso === filterEstado
       const matchSector = filterSector === 'Todos' || p.sector === filterSector
+      const matchCategoria = filterCategoria === 'Todos' || p.categoria === filterCategoria
 
-      return matchSearch && matchAño && matchEstado && matchSector
+      return matchSearch && matchAño && matchEstado && matchSector && matchCategoria
     })
   }, [procesos, search, filterAño, filterEstado, filterSector])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  const hasFilters = search || filterAño !== 'Todos' || filterEstado !== 'Todos' || filterSector !== 'Todos'
+  const hasFilters = search || filterAño !== 'Todos' || filterEstado !== 'Todos' || filterSector !== 'Todos' || filterCategoria !== 'Todos'
 
   const clearFilters = () => {
     setSearch('')
     setFilterAño('Todos')
     setFilterEstado('Todos')
     setFilterSector('Todos')
+    setFilterCategoria('Todos')
     setPage(1)
   }
 
@@ -94,6 +98,7 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
   const handleExport = () => {
     const data = filtered.map((p) => ({
       'Entidad': p.entidad,
+      'Categoría': p.categoria ?? '',
       'Objeto': p.objeto_proceso,
       'Sector': p.sector,
       'Fuente': p.fuente,
@@ -158,6 +163,16 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
               {SECTORES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
 
+            {/* Filtro Categoría */}
+            <select
+              value={filterCategoria}
+              onChange={(e) => { setFilterCategoria(e.target.value); setPage(1) }}
+              className="h-9 px-3 text-sm border border-gray-200 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="Todos">Todas las categorías</option>
+              {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+
             {hasFilters && (
               <Button variant="ghost" size="sm" onClick={clearFilters} className="text-gray-500 gap-1">
                 <X className="h-4 w-4" />Limpiar
@@ -193,6 +208,7 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
             <thead>
               <tr className="bg-gray-50">
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Entidad / N° Proceso</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Categoría</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Objeto</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Sector</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Estado</th>
@@ -205,7 +221,7 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
             <tbody className="divide-y divide-gray-50">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-16 text-center">
+                  <td colSpan={9} className="px-4 py-16 text-center">
                     <div className="text-5xl mb-3">🔍</div>
                     <p className="text-gray-500 font-medium">No se encontraron procesos</p>
                     <p className="text-gray-400 text-sm mt-1">
@@ -226,6 +242,11 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
                       {proceso.numero_proceso && (
                         <p className="text-xs text-gray-500 font-mono">{proceso.numero_proceso}</p>
                       )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {proceso.categoria
+                        ? <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700 max-w-[160px] truncate block">{proceso.categoria}</span>
+                        : <span className="text-gray-300 text-xs">—</span>}
                     </td>
                     <td className="px-4 py-3">
                       <p className="text-gray-700 max-w-[220px] truncate">{proceso.objeto_proceso}</p>

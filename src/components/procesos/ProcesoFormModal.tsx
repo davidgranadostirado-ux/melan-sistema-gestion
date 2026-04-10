@@ -51,6 +51,7 @@ const EMPTY_FORM: ProcesoFormData = {
   gestion_realizar: '',
   participa: 'SI',
   observaciones: '',
+  categoria: '',
   fecha_cargue: '',
 }
 
@@ -124,6 +125,7 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
       proponente_ganador: form.proponente_ganador || null,
       gestion_realizar: form.gestion_realizar || null,
       observaciones: form.observaciones || null,
+      categoria: form.categoria || null,
       fecha_cargue: form.fecha_cargue || null,
     }
 
@@ -250,6 +252,17 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
                 />
               </Field>
             </div>
+
+            <Field label="Categoría">
+              <Select value={form.categoria ?? ''} onValueChange={(v) => handleChange('categoria', v)}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar categoría..." /></SelectTrigger>
+                <SelectContent>
+                  {['INSUMOS DE ASEO','INSUMOS DE ASEO Y CAFETERIA','INSUMOS DE CAFETERIA','INSUMOS DE PAPELERÍA','INSUMOS DE PROTECCION PERSONAL','INSUMOS DEPORTIVOS','INSUMOS LUDICOS','SUMINISTRO DE ASEO','SUMINISTRO DE FERRETERÍA','SUMINISTRO DE HIGIENE','SUMINISTRO DE MERCADOS','SUMINISTRO DE TECNOLOGÍA','SUMINISTRO MOBILIARIO'].map((cat) => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
 
             <Field label="Entidad" required>
               <Input value={form.entidad} onChange={(e) => handleChange('entidad', e.target.value)} placeholder="Nombre completo de la entidad contratante" required />
