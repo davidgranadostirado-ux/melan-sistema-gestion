@@ -104,7 +104,7 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
       'Número Proceso': p.numero_proceso ?? '',
       'Participa': p.participa ?? '',
       'Proponente Ganador': p.proponente_ganador ?? '',
-      'Valor SUMICORP': p.valor_ofertado_sumicorp ?? '',
+      'Valor': p.valor_ofertado_sumicorp ?? '',
       'Fecha Cargue CRM': p.fecha_cargue ?? '',
     }))
     exportToCSV(data, `procesos-melan-${new Date().toISOString().split('T')[0]}`)

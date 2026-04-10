@@ -325,7 +325,7 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
           </Section>
 
           {/* Sección: Información de Adjudicación */}
-          <Section title="Adjudicación y SUMICORP">
+          <Section title="Adjudicación">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Proponente Ganador">
                 <Input value={form.proponente_ganador as string} onChange={(e) => handleChange('proponente_ganador', e.target.value)} placeholder="Nombre del proponente ganador" />
@@ -335,11 +335,11 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
                 <Input type="number" value={form.valor_ofertado_ganador} onChange={(e) => handleChange('valor_ofertado_ganador', e.target.valueAsNumber || 0)} placeholder="0" min="0" />
               </Field>
 
-              <Field label="Valor Ofertado SUMICORP (COP)">
+              <Field label="Valor Ofertado (COP)">
                 <Input type="number" value={form.valor_ofertado_sumicorp} onChange={(e) => handleChange('valor_ofertado_sumicorp', e.target.valueAsNumber || 0)} placeholder="0" min="0" />
               </Field>
 
-              <Field label="SUMICORP Cumple">
+              <Field label="Cumple">
                 <Select value={form.sumicorp_cumple ?? 'PENDIENTE'} onValueChange={(v) => handleChange('sumicorp_cumple', v as SumicorpCumple)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>

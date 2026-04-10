@@ -58,9 +58,9 @@ export default async function AdjudicadosPage() {
             <TrendingUp className="h-6 w-6 text-white" />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Valor SUMICORP</p>
+            <p className="text-sm text-gray-500">Valor</p>
             <p className="text-xl font-bold text-gray-900">{formatCurrency(sumicorpTotal)}</p>
-            <p className="text-xs text-gray-400">Total ofertado por SUMICORP</p>
+            <p className="text-xs text-gray-400">Total ofertado</p>
           </div>
         </div>
       </div>

@@ -57,8 +57,8 @@ export function AdjudicadosClient({ procesos }: AdjudicadosClientProps) {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Objeto</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Proponente Ganador</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Cuantía</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Valor SUMICORP</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">SUMICORP Cumple</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Valor</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">Cumple</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Fecha</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">Ver</th>
               </tr>

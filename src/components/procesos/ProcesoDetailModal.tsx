@@ -81,7 +81,7 @@ export function ProcesoDetailModal({ open, onClose, proceso }: ProcesoDetailModa
 
           {/* Adjudicación */}
           {(proceso.proponente_ganador || proceso.valor_ofertado_ganador || proceso.valor_ofertado_sumicorp) && (
-            <InfoSection title="Adjudicación y SUMICORP" icon={<Award className="h-4 w-4" />} fullWidth>
+            <InfoSection title="Adjudicación" icon={<Award className="h-4 w-4" />} fullWidth>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-gray-50 rounded-lg p-3">
                   <p className="text-xs text-gray-500 font-medium">Proponente Ganador</p>
@@ -92,12 +92,12 @@ export function ProcesoDetailModal({ open, onClose, proceso }: ProcesoDetailModa
                   <p className="text-sm font-semibold text-gray-900 mt-1">{formatCurrency(proceso.valor_ofertado_ganador)}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 font-medium">Valor SUMICORP</p>
+                  <p className="text-xs text-gray-500 font-medium">Valor</p>
                   <p className="text-sm font-semibold text-gray-900 mt-1">{formatCurrency(proceso.valor_ofertado_sumicorp)}</p>
                 </div>
               </div>
               <div className="mt-3 flex items-center gap-2">
-                <p className="text-xs text-gray-500 font-medium">SUMICORP Cumple:</p>
+                <p className="text-xs text-gray-500 font-medium">Cumple:</p>
                 <SumicorpBadge cumple={proceso.sumicorp_cumple} />
               </div>
             </InfoSection>
