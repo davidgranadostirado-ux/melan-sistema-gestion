@@ -54,14 +54,12 @@ export default function LoginPage() {
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-800 to-blue-600 px-8 py-10 text-center">
             <div className="flex items-center justify-center mb-4">
-              <div className="bg-white rounded-xl px-5 py-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="https://www.melanservices.com/web/images/logo.svg"
-                  alt="Melan Services"
-                  className="h-10 w-auto object-contain"
-                />
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="https://www.melanservices.com/web/images/logo.svg"
+                alt="Melan Services"
+                className="h-14 w-auto object-contain brightness-0 invert"
+              />
             </div>
             <p className="text-blue-100 text-sm mt-1">Sistema de Gestión de Licitaciones</p>
           </div>
