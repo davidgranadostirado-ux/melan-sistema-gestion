@@ -121,7 +121,10 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
       'Número Proceso': p.numero_proceso ?? '',
       'Participa': p.participa ?? '',
       'Proponente Ganador': p.proponente_ganador ?? '',
-      'Valor': p.valor_ofertado_sumicorp ?? '',
+      'Valor Ofertado': p.valor_ofertado_sumicorp ?? '',
+      'N° Participantes': p.cantidad_participantes ?? '',
+      'Posición': p.posicion ?? '',
+      'Tiempo Ejecución': p.tiempo_ejecucion ?? '',
       'Fecha Cargue CRM': p.fecha_cargue ?? '',
     }))
     exportToCSV(data, `procesos-melan-${new Date().toISOString().split('T')[0]}`)
@@ -284,6 +287,14 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
                     <td className="px-4 py-3">
                       <p className="text-gray-700 max-w-[220px] truncate">{proceso.objeto_proceso}</p>
                       <p className="text-xs text-gray-400">{proceso.fuente} · {proceso.mes_publicacion}</p>
+                      {(proceso.cantidad_participantes != null || proceso.posicion != null) && (
+                        <p className="text-xs text-indigo-500 mt-0.5">
+                          {proceso.cantidad_participantes != null && `${proceso.cantidad_participantes} proponentes`}
+                          {proceso.posicion != null && proceso.cantidad_participantes != null && ' · '}
+                          {proceso.posicion != null && `Pos. ${proceso.posicion}`}
+                          {proceso.tiempo_ejecucion && ` · ${proceso.tiempo_ejecucion}`}
+                        </p>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <SectorBadge sector={proceso.sector} />

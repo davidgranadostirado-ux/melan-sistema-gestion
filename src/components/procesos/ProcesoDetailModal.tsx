@@ -93,13 +93,39 @@ export function ProcesoDetailModal({ open, onClose, proceso }: ProcesoDetailModa
                   <p className="text-sm font-semibold text-gray-900 mt-1">{formatCurrency(proceso.valor_ofertado_ganador)}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 font-medium">Valor</p>
+                  <p className="text-xs text-gray-500 font-medium">Valor Ofertado</p>
                   <p className="text-sm font-semibold text-gray-900 mt-1">{formatCurrency(proceso.valor_ofertado_sumicorp)}</p>
                 </div>
               </div>
               <div className="mt-3 flex items-center gap-2">
                 <p className="text-xs text-gray-500 font-medium">Cumple:</p>
                 <SumicorpBadge cumple={proceso.sumicorp_cumple} />
+              </div>
+            </InfoSection>
+          )}
+
+          {/* Competencia */}
+          {(proceso.cantidad_participantes != null || proceso.posicion != null || proceso.tiempo_ejecucion) && (
+            <InfoSection title="Competencia" icon={<User className="h-4 w-4" />} fullWidth>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {proceso.cantidad_participantes != null && (
+                  <div className="bg-indigo-50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-indigo-600 font-medium">N° Proponentes</p>
+                    <p className="text-2xl font-bold text-indigo-900 mt-1">{proceso.cantidad_participantes}</p>
+                  </div>
+                )}
+                {proceso.posicion != null && (
+                  <div className="bg-indigo-50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-indigo-600 font-medium">Posición</p>
+                    <p className="text-2xl font-bold text-indigo-900 mt-1">{proceso.posicion}</p>
+                  </div>
+                )}
+                {proceso.tiempo_ejecucion && (
+                  <div className="bg-indigo-50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-indigo-600 font-medium">Tiempo Ejecución</p>
+                    <p className="text-lg font-bold text-indigo-900 mt-1">{proceso.tiempo_ejecucion}</p>
+                  </div>
+                )}
               </div>
             </InfoSection>
           )}

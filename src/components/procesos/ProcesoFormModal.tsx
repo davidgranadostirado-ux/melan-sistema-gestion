@@ -53,6 +53,9 @@ const EMPTY_FORM: ProcesoFormData = {
   observaciones: '',
   categoria: '',
   fecha_cargue: '',
+  cantidad_participantes: undefined,
+  posicion: undefined,
+  tiempo_ejecucion: '',
 }
 
 export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoFormModalProps) {
@@ -127,6 +130,9 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
       observaciones: form.observaciones || null,
       categoria: form.categoria || null,
       fecha_cargue: form.fecha_cargue || null,
+      cantidad_participantes: form.cantidad_participantes ?? null,
+      posicion: form.posicion ?? null,
+      tiempo_ejecucion: form.tiempo_ejecucion || null,
     }
 
     let error
@@ -352,6 +358,37 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
                     <SelectItem value="PENDIENTE">PENDIENTE</SelectItem>
                   </SelectContent>
                 </Select>
+              </Field>
+            </div>
+          </Section>
+
+          {/* Sección: Competencia */}
+          <Section title="Competencia">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Field label="N° Participantes">
+                <Input
+                  type="number"
+                  value={form.cantidad_participantes ?? ''}
+                  onChange={(e) => handleChange('cantidad_participantes', e.target.valueAsNumber || 0)}
+                  placeholder="0"
+                  min="0"
+                />
+              </Field>
+              <Field label="Posición">
+                <Input
+                  type="number"
+                  value={form.posicion ?? ''}
+                  onChange={(e) => handleChange('posicion', e.target.valueAsNumber || 0)}
+                  placeholder="0"
+                  min="0"
+                />
+              </Field>
+              <Field label="Tiempo de Ejecución">
+                <Input
+                  value={form.tiempo_ejecucion as string ?? ''}
+                  onChange={(e) => handleChange('tiempo_ejecucion', e.target.value)}
+                  placeholder="Ej: 30 DIAS, 6 MESES..."
+                />
               </Field>
             </div>
           </Section>

@@ -108,6 +108,20 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
     .sort(([a], [b]) => Number(a) - Number(b))
     .map(([name, value]) => ({ name, value }))
 
+  // Distribución de posiciones (top 10)
+  const posicionData = Object.entries(
+    filtered
+      .filter((p) => p.posicion != null && p.posicion > 0)
+      .reduce<Record<string, number>>((acc, p) => {
+        const key = `Pos. ${p.posicion}`
+        acc[key] = (acc[key] || 0) + 1
+        return acc
+      }, {})
+  )
+    .sort(([a], [b]) => Number(a.replace('Pos. ', '')) - Number(b.replace('Pos. ', '')))
+    .slice(0, 10)
+    .map(([name, value]) => ({ name, value }))
+
   const selectClass = 'h-9 px-3 text-sm border border-gray-200 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
 
   // Métricas calculadas desde filtered
@@ -118,6 +132,19 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
   const cuantiaTotal = filtered.reduce((s, p) => s + (p.cuantia_proceso ?? 0), 0)
   const tasaAdj      = total > 0 ? ((adjudicados / total) * 100).toFixed(1) : '0'
 
+  // KPIs de competencia
+  const conParticipantes = filtered.filter((p) => p.cantidad_participantes != null && p.cantidad_participantes > 0)
+  const avgParticipantes = conParticipantes.length > 0
+    ? Math.round(conParticipantes.reduce((s, p) => s + (p.cantidad_participantes ?? 0), 0) / conParticipantes.length)
+    : null
+  const conPosicion = filtered.filter((p) => p.posicion != null && p.posicion > 0)
+  const avgPosicion = conPosicion.length > 0
+    ? (conPosicion.reduce((s, p) => s + (p.posicion ?? 0), 0) / conPosicion.length).toFixed(1)
+    : null
+  // Top posicion: cuántos quedaron en posición 1 vs total con dato
+  const pos1 = conPosicion.filter((p) => p.posicion === 1).length
+  const tasaPos1 = conPosicion.length > 0 ? Math.round((pos1 / conPosicion.length) * 100) : null
+
   return (
     <div className="space-y-6">
       {/* Tarjetas de métricas — reaccionan a los filtros */}
@@ -127,6 +154,21 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
         <StatCard label="Cuantía Total"           value={formatCurrency(cuantiaTotal)} color="purple" sub="Suma filtrada" small />
         <StatCard label="Cancelados / Desiertos"  value={cancelados + desiertos}    color="red"    sub={`${cancelados} cancel. · ${desiertos} desiert.`} />
       </div>
+
+      {/* KPIs de competencia */}
+      {(avgParticipantes !== null || avgPosicion !== null) && (
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          {avgParticipantes !== null && (
+            <StatCard label="Prom. Proponentes" value={avgParticipantes} color="indigo" sub={`${conParticipantes.length} procesos con dato`} />
+          )}
+          {avgPosicion !== null && (
+            <StatCard label="Posición Promedio" value={`# ${avgPosicion}`} color="indigo" sub={`${conPosicion.length} procesos evaluados`} />
+          )}
+          {tasaPos1 !== null && (
+            <StatCard label="1er Lugar" value={`${tasaPos1}%`} color="indigo" sub={`${pos1} de ${conPosicion.length} procesos`} />
+          )}
+        </div>
+      )}
 
       {/* Panel de filtros */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
@@ -253,6 +295,23 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
             </ResponsiveContainer>
           )}
         </div>
+
+        {/* Distribución de Posiciones */}
+        {posicionData.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm xl:col-span-2">
+            <h3 className="text-base font-semibold text-gray-800 mb-1">Distribución de Posiciones</h3>
+            <p className="text-xs text-gray-500 mb-4">Posición final obtenida en cada proceso evaluado</p>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={posicionData} barSize={40}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <Tooltip formatter={(v: number) => [v, 'Procesos']} />
+                <Bar dataKey="value" name="Procesos" fill="#6366f1" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -277,6 +336,7 @@ function StatCard({ label, value, color, sub, small }: {
     green:  'bg-green-50 border-green-100 text-green-900',
     purple: 'bg-purple-50 border-purple-100 text-purple-900',
     red:    'bg-red-50 border-red-100 text-red-900',
+    indigo: 'bg-indigo-50 border-indigo-100 text-indigo-900',
   }
   return (
     <div className={`rounded-xl border p-5 ${colorClasses[color]}`}>

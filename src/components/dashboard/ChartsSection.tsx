@@ -115,6 +115,16 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
   const cuantiaF     = filtered.reduce((s, p) => s + (p.cuantia_proceso ?? 0), 0)
   const tasaAdjF     = totalF > 0 ? Math.round((adjudicadosF / totalF) * 100) : 0
 
+  // KPIs de competencia
+  const conParticipantes = filtered.filter((p) => p.cantidad_participantes != null && p.cantidad_participantes > 0)
+  const avgParticipantes = conParticipantes.length > 0
+    ? Math.round(conParticipantes.reduce((s, p) => s + (p.cantidad_participantes ?? 0), 0) / conParticipantes.length)
+    : null
+  const conPosicion = filtered.filter((p) => p.posicion != null && p.posicion > 0)
+  const avgPosicion = conPosicion.length > 0
+    ? (conPosicion.reduce((s, p) => s + (p.posicion ?? 0), 0) / conPosicion.length).toFixed(1)
+    : null
+
   return (
     <div className="space-y-4">
       {/* Filtros */}
@@ -164,6 +174,18 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
         <DashCard label="En Evaluación"       value={enEvalF}                     sub="Procesos activos"                                  color="yellow" />
         <DashCard label="Cuantía Total"       value={formatCurrency(cuantiaF)}    sub="Suma filtrada"                                    color="purple" small />
       </div>
+
+      {/* KPIs de competencia */}
+      {(avgParticipantes !== null || avgPosicion !== null) && (
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          {avgParticipantes !== null && (
+            <DashCard label="Prom. Proponentes" value={avgParticipantes} sub={`${conParticipantes.length} procesos con dato`} color="indigo" />
+          )}
+          {avgPosicion !== null && (
+            <DashCard label="Posición Promedio" value={`# ${avgPosicion}`} sub={`${conPosicion.length} procesos con dato`} color="indigo" />
+          )}
+        </div>
+      )}
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -257,6 +279,7 @@ function DashCard({ label, value, sub, color, small }: {
     green:  'bg-green-50 border-green-100 text-green-900',
     yellow: 'bg-yellow-50 border-yellow-100 text-yellow-900',
     purple: 'bg-purple-50 border-purple-100 text-purple-900',
+    indigo: 'bg-indigo-50 border-indigo-100 text-indigo-900',
   }
   return (
     <div className={`rounded-xl border p-4 ${colors[color]}`}>
