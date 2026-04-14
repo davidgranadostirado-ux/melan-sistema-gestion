@@ -70,6 +70,14 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
 
   const hasFilters = search || filterAño !== 'Todos' || filterEstado !== 'Todos' || filterSector !== 'Todos' || filterMes !== 'Todos' || filterCategoria !== 'Todos'
 
+  // Métricas del resultado filtrado
+  const metricasFiltradas = useMemo(() => ({
+    total:        filtered.length,
+    adjudicados:  filtered.filter((p) => p.estado_proceso === 'Adjudicado').length,
+    enEvaluacion: filtered.filter((p) => p.estado_proceso === 'En Evaluación').length,
+    cuantiaTotal: filtered.reduce((s, p) => s + (p.cuantia_proceso ?? 0), 0),
+  }), [filtered])
+
   const clearFilters = () => {
     setSearch('')
     setFilterAño('Todos')
@@ -122,6 +130,14 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
 
   return (
     <>
+      {/* Tarjetas resumen — reaccionan a filtros */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
+        <SummaryCard label="Total"        value={metricasFiltradas.total}        color="blue" />
+        <SummaryCard label="Adjudicados"  value={metricasFiltradas.adjudicados}  color="green" />
+        <SummaryCard label="En Evaluación" value={metricasFiltradas.enEvaluacion} color="yellow" />
+        <SummaryCard label="Cuantía"      value={formatCurrency(metricasFiltradas.cuantiaTotal)} color="purple" small />
+      </div>
+
       {/* Controles */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
         {/* Barra de filtros */}
@@ -378,5 +394,22 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
         proceso={viewProceso}
       />
     </>
+  )
+}
+
+function SummaryCard({ label, value, color, small }: {
+  label: string; value: string | number; color: string; small?: boolean
+}) {
+  const colors: Record<string, string> = {
+    blue:   'bg-blue-50 border-blue-100 text-blue-900',
+    green:  'bg-green-50 border-green-100 text-green-900',
+    yellow: 'bg-yellow-50 border-yellow-100 text-yellow-900',
+    purple: 'bg-purple-50 border-purple-100 text-purple-900',
+  }
+  return (
+    <div className={`rounded-xl border p-4 ${colors[color]}`}>
+      <p className="text-xs font-semibold uppercase tracking-wide opacity-70">{label}</p>
+      <p className={`font-bold mt-1 ${small ? 'text-base' : 'text-2xl'}`}>{value}</p>
+    </div>
   )
 }

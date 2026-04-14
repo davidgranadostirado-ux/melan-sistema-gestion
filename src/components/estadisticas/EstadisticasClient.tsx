@@ -7,6 +7,7 @@ import {
 } from 'recharts'
 import type { Proceso, EstadoProceso } from '@/types'
 import { X } from 'lucide-react'
+import { formatCurrency } from '@/lib/utils'
 
 interface EstadisticasClientProps {
   procesos: Proceso[]
@@ -109,8 +110,24 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
 
   const selectClass = 'h-9 px-3 text-sm border border-gray-200 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
 
+  // Métricas calculadas desde filtered
+  const total        = filtered.length
+  const adjudicados  = filtered.filter((p) => p.estado_proceso === 'Adjudicado').length
+  const cancelados   = filtered.filter((p) => p.estado_proceso === 'Cancelado').length
+  const desiertos    = filtered.filter((p) => p.estado_proceso === 'Desierto').length
+  const cuantiaTotal = filtered.reduce((s, p) => s + (p.cuantia_proceso ?? 0), 0)
+  const tasaAdj      = total > 0 ? ((adjudicados / total) * 100).toFixed(1) : '0'
+
   return (
     <div className="space-y-6">
+      {/* Tarjetas de métricas — reaccionan a los filtros */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard label="Total Procesos"          value={total}                     color="blue"   sub={hasFilters ? 'Con filtros aplicados' : 'Histórico total'} />
+        <StatCard label="Tasa de Adjudicación"    value={`${tasaAdj}%`}             color="green"  sub={`${adjudicados} adjudicados`} />
+        <StatCard label="Cuantía Total"           value={formatCurrency(cuantiaTotal)} color="purple" sub="Suma filtrada" small />
+        <StatCard label="Cancelados / Desiertos"  value={cancelados + desiertos}    color="red"    sub={`${cancelados} cancel. · ${desiertos} desiert.`} />
+      </div>
+
       {/* Panel de filtros */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
         <div className="flex flex-wrap gap-3 items-center">
@@ -248,6 +265,24 @@ function EmptyChart() {
         <div className="text-4xl mb-2">📊</div>
         <p className="text-sm">Sin datos para los filtros seleccionados</p>
       </div>
+    </div>
+  )
+}
+
+function StatCard({ label, value, color, sub, small }: {
+  label: string; value: string | number; color: string; sub?: string; small?: boolean
+}) {
+  const colorClasses: Record<string, string> = {
+    blue:   'bg-blue-50 border-blue-100 text-blue-900',
+    green:  'bg-green-50 border-green-100 text-green-900',
+    purple: 'bg-purple-50 border-purple-100 text-purple-900',
+    red:    'bg-red-50 border-red-100 text-red-900',
+  }
+  return (
+    <div className={`rounded-xl border p-5 ${colorClasses[color]}`}>
+      <p className="text-xs font-semibold uppercase tracking-wide opacity-70">{label}</p>
+      <p className={`font-bold mt-1 ${small ? 'text-lg' : 'text-3xl'}`}>{value}</p>
+      {sub && <p className="text-xs opacity-60 mt-1">{sub}</p>}
     </div>
   )
 }

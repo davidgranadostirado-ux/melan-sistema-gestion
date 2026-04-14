@@ -108,6 +108,13 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
     .slice(0, 6)
     .map(([name, value]) => ({ name: name.length > 25 ? name.slice(0, 25) + '…' : name, value }))
 
+  // Métricas calculadas desde filtered
+  const totalF       = filtered.length
+  const adjudicadosF = filtered.filter((p) => p.estado_proceso === 'Adjudicado').length
+  const enEvalF      = filtered.filter((p) => p.estado_proceso === 'En Evaluación').length
+  const cuantiaF     = filtered.reduce((s, p) => s + (p.cuantia_proceso ?? 0), 0)
+  const tasaAdjF     = totalF > 0 ? Math.round((adjudicadosF / totalF) * 100) : 0
+
   return (
     <div className="space-y-4">
       {/* Filtros */}
@@ -148,6 +155,14 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
         <span className="ml-auto text-xs text-gray-500">
           <span className="font-semibold text-gray-800">{filtered.length}</span> procesos
         </span>
+      </div>
+
+      {/* Tarjetas de métricas — reaccionan a los filtros */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <DashCard label="Total Procesos"      value={totalF}                      sub={hasFilters ? 'Con filtros' : 'Todos los procesos'} color="blue" />
+        <DashCard label="Adjudicados"         value={`${adjudicadosF} (${tasaAdjF}%)`} sub="Tasa de adjudicación"                       color="green" />
+        <DashCard label="En Evaluación"       value={enEvalF}                     sub="Procesos activos"                                  color="yellow" />
+        <DashCard label="Cuantía Total"       value={formatCurrency(cuantiaF)}    sub="Suma filtrada"                                    color="purple" small />
       </div>
 
       {/* Gráficos */}
@@ -230,6 +245,24 @@ function EmptyChart() {
         <div className="text-4xl mb-2">📊</div>
         <p className="text-sm">Sin datos para los filtros seleccionados</p>
       </div>
+    </div>
+  )
+}
+
+function DashCard({ label, value, sub, color, small }: {
+  label: string; value: string | number; sub?: string; color: string; small?: boolean
+}) {
+  const colors: Record<string, string> = {
+    blue:   'bg-blue-50 border-blue-100 text-blue-900',
+    green:  'bg-green-50 border-green-100 text-green-900',
+    yellow: 'bg-yellow-50 border-yellow-100 text-yellow-900',
+    purple: 'bg-purple-50 border-purple-100 text-purple-900',
+  }
+  return (
+    <div className={`rounded-xl border p-4 ${colors[color]}`}>
+      <p className="text-xs font-semibold uppercase tracking-wide opacity-70">{label}</p>
+      <p className={`font-bold mt-1 ${small ? 'text-base' : 'text-2xl'}`}>{value}</p>
+      {sub && <p className="text-xs opacity-60 mt-0.5">{sub}</p>}
     </div>
   )
 }
