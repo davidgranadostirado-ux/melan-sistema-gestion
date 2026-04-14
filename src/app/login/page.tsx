@@ -35,6 +35,11 @@ export default function LoginPage() {
       return
     }
 
+    // Marcar sesión activa en sessionStorage.
+    // Al cerrar el navegador, sessionStorage se borra automáticamente
+    // y SessionGuard cerrará la sesión al volver a abrir.
+    sessionStorage.setItem('melan_session_active', '1')
+
     router.push('/dashboard')
     router.refresh()
   }

@@ -21,7 +21,7 @@ const ESTADO_COLORS: Record<string, string> = {
   'Borrador':      '#7c3aed',
   'Pendiente':     '#1a56db',
 }
-const FUENTE_COLORS = ['#1a56db', '#059669', '#d97706', '#dc2626']
+const FUENTE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4']
 const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
 const ESTADOS: EstadoProceso[] = ['En Evaluación','Adjudicado','Cancelado','Desierto','Borrador','Pendiente']
 const CATEGORIAS = ['INSUMOS DE ASEO','INSUMOS DE ASEO Y CAFETERIA','INSUMOS DE CAFETERIA','INSUMOS DE PAPELERÍA','INSUMOS DE PROTECCION PERSONAL','INSUMOS DEPORTIVOS','INSUMOS LUDICOS','SUMINISTRO DE ASEO','SUMINISTRO DE FERRETERÍA','SUMINISTRO DE HIGIENE','SUMINISTRO DE MERCADOS','SUMINISTRO DE TECNOLOGÍA','SUMINISTRO MOBILIARIO']
@@ -236,13 +236,30 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
         <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
           <h3 className="text-base font-semibold text-gray-800 mb-4">Distribución por Fuente</h3>
           {fuenteData.length === 0 ? <EmptyChart /> : (
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
-                <Pie data={fuenteData} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                  {fuenteData.map((_, i) => <Cell key={i} fill={FUENTE_COLORS[i % FUENTE_COLORS.length]} />)}
+                <Pie
+                  data={fuenteData}
+                  cx="50%"
+                  cy="45%"
+                  innerRadius={65}
+                  outerRadius={100}
+                  paddingAngle={4}
+                  dataKey="value"
+                >
+                  {fuenteData.map((_, i) => (
+                    <Cell key={i} fill={FUENTE_COLORS[i % FUENTE_COLORS.length]} />
+                  ))}
                 </Pie>
-                <Tooltip formatter={(v: number) => [v, 'Procesos']} />
-                <Legend />
+                <Tooltip
+                  formatter={(v: number, name: string) => [v, name]}
+                  contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px' }}
+                />
+                <Legend
+                  iconType="circle"
+                  iconSize={10}
+                  formatter={(value) => <span style={{ fontSize: '12px', color: '#374151' }}>{value}</span>}
+                />
               </PieChart>
             </ResponsiveContainer>
           )}

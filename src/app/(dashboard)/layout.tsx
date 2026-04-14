@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Topbar } from '@/components/layout/Topbar'
+import { SessionGuard } from '@/components/layout/SessionGuard'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
@@ -23,6 +24,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
+      <SessionGuard />
       <Sidebar userProfile={profile} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Topbar userProfile={profile} />
