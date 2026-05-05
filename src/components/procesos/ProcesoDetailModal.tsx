@@ -1,7 +1,7 @@
 'use client'
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { StatusBadge, SectorBadge, SumicorpBadge } from '@/components/shared/StatusBadge'
+import { StatusBadge, SectorBadge, SumicorpBadge, ParticipaBadge } from '@/components/shared/StatusBadge'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import type { Proceso } from '@/types'
 import { Building2, Calendar, MapPin, DollarSign, FileText, User, Mail, Clock, Award } from 'lucide-react'
@@ -22,8 +22,9 @@ export function ProcesoDetailModal({ open, onClose, proceso }: ProcesoDetailModa
         <div className="bg-gradient-to-r from-blue-800 to-blue-600 px-6 py-5 rounded-t-lg">
           <div className="flex items-start justify-between">
             <div className="flex-1 pr-8">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <SectorBadge sector={proceso.sector} />
+                <ParticipaBadge participa={proceso.participa ?? 'SI'} />
                 <span className="text-blue-200 text-xs">{proceso.fuente}</span>
                 {proceso.numero_proceso && (
                   <span className="text-blue-200 text-xs font-mono">{proceso.numero_proceso}</span>

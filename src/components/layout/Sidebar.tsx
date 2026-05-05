@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, FileText, Award, BarChart3, Users, LogOut, X, Menu,
+  LayoutDashboard, FileText, Award, BarChart3, Users, LogOut, X, Menu, Target,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -15,6 +15,7 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/procesos', label: 'Procesos de Licitación', icon: FileText },
   { href: '/adjudicados', label: 'Adjudicados', icon: Award },
+  { href: '/comparativo', label: 'Participados vs Adjudicados', icon: Target },
   { href: '/estadisticas', label: 'Estadísticas', icon: BarChart3 },
   { href: '/usuarios', label: 'Gestión de Usuarios', icon: Users },
 ]

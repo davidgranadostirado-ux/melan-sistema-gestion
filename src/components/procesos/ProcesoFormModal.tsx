@@ -222,6 +222,8 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
                   <SelectContent>
                     <SelectItem value="Pendiente">Pendiente</SelectItem>
                     <SelectItem value="Borrador">Borrador</SelectItem>
+                    <SelectItem value="Estudio de Mercado">Estudio de Mercado</SelectItem>
+                    <SelectItem value="A Presentar">A Presentar</SelectItem>
                     <SelectItem value="En Evaluación">En Evaluación</SelectItem>
                     <SelectItem value="Adjudicado">Adjudicado</SelectItem>
                     <SelectItem value="Cancelado">Cancelado</SelectItem>

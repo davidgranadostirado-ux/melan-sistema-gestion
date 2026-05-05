@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS public.procesos (
   -- Entidad
   entidad                   TEXT NOT NULL,
   estado_proceso            TEXT NOT NULL DEFAULT 'Pendiente'
-                              CHECK (estado_proceso IN ('En Evaluación', 'Adjudicado', 'Cancelado', 'Desierto', 'Borrador', 'Pendiente')),
+                              CHECK (estado_proceso IN ('En Evaluación', 'Adjudicado', 'Cancelado', 'Desierto', 'Borrador', 'Pendiente', 'Estudio de Mercado', 'A Presentar')),
 
   -- Localización
   departamento_ejecucion    TEXT,

@@ -1,4 +1,4 @@
-import { StatusBadge, SectorBadge } from '@/components/shared/StatusBadge'
+import { StatusBadge, SectorBadge, ParticipaBadge } from '@/components/shared/StatusBadge'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import type { Proceso } from '@/types'
 
@@ -22,6 +22,7 @@ export function RecentProcesses({ procesos }: RecentProcessesProps) {
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Entidad</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Objeto</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Sector</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">Participación</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Estado</th>
               <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Cuantía</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Fecha</th>
@@ -30,7 +31,7 @@ export function RecentProcesses({ procesos }: RecentProcessesProps) {
           <tbody className="divide-y divide-gray-50">
             {recent.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
                   <div className="text-4xl mb-2">📋</div>
                   <p>No hay procesos registrados</p>
                 </td>
@@ -49,6 +50,9 @@ export function RecentProcesses({ procesos }: RecentProcessesProps) {
                   </td>
                   <td className="px-4 py-3">
                     <SectorBadge sector={proceso.sector} />
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <ParticipaBadge participa={proceso.participa ?? 'SI'} />
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge estado={proceso.estado_proceso} />

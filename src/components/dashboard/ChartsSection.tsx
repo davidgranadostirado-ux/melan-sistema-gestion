@@ -14,17 +14,19 @@ interface ChartsSectionProps {
 }
 
 const ESTADO_COLORS: Record<string, string> = {
-  'En Evaluación': '#d97706',
-  'Adjudicado':    '#059669',
-  'Cancelado':     '#dc2626',
-  'Desierto':      '#6b7280',
-  'Borrador':      '#7c3aed',
-  'Pendiente':     '#1a56db',
+  'En Evaluación':       '#d97706',
+  'Adjudicado':          '#059669',
+  'Cancelado':           '#dc2626',
+  'Desierto':            '#6b7280',
+  'Borrador':            '#7c3aed',
+  'Pendiente':           '#1a56db',
+  'Estudio de Mercado':  '#0891b2',
+  'A Presentar':         '#ea580c',
 }
 const SECTOR_COLORS = ['#1a56db', '#059669']
 const MESES_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const MESES_FULL  = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
-const ESTADOS: EstadoProceso[] = ['En Evaluación','Adjudicado','Cancelado','Desierto','Borrador','Pendiente']
+const ESTADOS: EstadoProceso[] = ['En Evaluación','Adjudicado','Cancelado','Desierto','Borrador','Pendiente','Estudio de Mercado','A Presentar']
 const CATEGORIAS = ['INSUMOS DE ASEO','INSUMOS DE ASEO Y CAFETERIA','INSUMOS DE CAFETERIA','INSUMOS DE PAPELERÍA','INSUMOS DE PROTECCION PERSONAL','INSUMOS DEPORTIVOS','INSUMOS LUDICOS','SUMINISTRO DE ASEO','SUMINISTRO DE FERRETERÍA','SUMINISTRO DE HIGIENE','SUMINISTRO DE MERCADOS','SUMINISTRO DE TECNOLOGÍA','SUMINISTRO MOBILIARIO']
 
 const selectClass = 'h-8 px-2 text-xs border border-gray-200 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
@@ -49,17 +51,18 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
   const [filterEstado, setFilterEstado]   = useState('Todos')
   const [filterSector, setFilterSector]   = useState('Todos')
   const [filterCategoria, setFilterCategoria] = useState('Todos')
+  const [filterParticipa, setFilterParticipa] = useState('Todos')
 
   const años = useMemo(() => {
     const set = new Set(procesos.map((p) => String(p.año_publicacion)).filter(Boolean))
     return ['Todos', ...Array.from(set).sort((a, b) => Number(b) - Number(a))]
   }, [procesos])
 
-  const hasFilters = filterAño !== 'Todos' || filterMes !== 'Todos' || filterEstado !== 'Todos' || filterSector !== 'Todos' || filterCategoria !== 'Todos'
+  const hasFilters = filterAño !== 'Todos' || filterMes !== 'Todos' || filterEstado !== 'Todos' || filterSector !== 'Todos' || filterCategoria !== 'Todos' || filterParticipa !== 'Todos'
 
   const clearFilters = () => {
     setFilterAño('Todos'); setFilterMes('Todos'); setFilterEstado('Todos')
-    setFilterSector('Todos'); setFilterCategoria('Todos')
+    setFilterSector('Todos'); setFilterCategoria('Todos'); setFilterParticipa('Todos')
   }
 
   const filtered = useMemo(() => procesos.filter((p) => {
@@ -68,8 +71,9 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
     if (filterEstado !== 'Todos' && p.estado_proceso !== filterEstado) return false
     if (filterSector !== 'Todos' && p.sector !== filterSector) return false
     if (filterCategoria !== 'Todos' && p.categoria !== filterCategoria) return false
+    if (filterParticipa !== 'Todos' && (p.participa ?? 'SI') !== filterParticipa) return false
     return true
-  }), [procesos, filterAño, filterMes, filterEstado, filterSector, filterCategoria])
+  }), [procesos, filterAño, filterMes, filterEstado, filterSector, filterCategoria, filterParticipa])
 
   // 1. Por Estado
   const estadoData = Object.entries(
@@ -115,6 +119,13 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
   const cuantiaF     = filtered.reduce((s, p) => s + (p.cuantia_proceso ?? 0), 0)
   const tasaAdjF     = totalF > 0 ? Math.round((adjudicadosF / totalF) * 100) : 0
 
+  // Métricas de participación
+  const participadosF    = filtered.filter((p) => (p.participa ?? 'SI') === 'SI').length
+  const noParticipadosF  = totalF - participadosF
+  const tasaParticipF    = totalF > 0 ? Math.round((participadosF / totalF) * 100) : 0
+  const adjDeParticipF   = filtered.filter((p) => (p.participa ?? 'SI') === 'SI' && p.estado_proceso === 'Adjudicado').length
+  const tasaExitoF       = participadosF > 0 ? Math.round((adjDeParticipF / participadosF) * 100) : 0
+
   // KPIs de competencia
   const conParticipantes = filtered.filter((p) => p.cantidad_participantes != null && p.cantidad_participantes > 0)
   const avgParticipantes = conParticipantes.length > 0
@@ -156,6 +167,12 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
           {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
 
+        <select value={filterParticipa} onChange={(e) => setFilterParticipa(e.target.value)} className={selectClass} title="Participación de Melan">
+          <option value="Todos">Toda participación</option>
+          <option value="SI">Participó</option>
+          <option value="NO">No participó</option>
+        </select>
+
         {hasFilters && (
           <button onClick={clearFilters} className="flex items-center gap-1 h-8 px-2 text-xs text-gray-500 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
             <X className="h-3 w-3" /> Limpiar
@@ -173,6 +190,14 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
         <DashCard label="Adjudicados"         value={`${adjudicadosF} (${tasaAdjF}%)`} sub="Tasa de adjudicación"                       color="green" />
         <DashCard label="En Evaluación"       value={enEvalF}                     sub="Procesos activos"                                  color="yellow" />
         <DashCard label="Cuantía Total"       value={formatCurrency(cuantiaF)}    sub="Suma filtrada"                                    color="purple" small />
+      </div>
+
+      {/* Tarjetas de Participación */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <DashCard label="Participados" value={`${participadosF} (${tasaParticipF}%)`} sub={`${noParticipadosF} no participados`} color="emerald" />
+        <DashCard label="No Participados" value={noParticipadosF} sub="Procesos no presentados" color="rose" />
+        <DashCard label="Tasa de Éxito" value={`${tasaExitoF}%`} sub={`${adjDeParticipF} adj. de ${participadosF} part.`} color="indigo" />
+        <DashCard label="Adjudicados / Total" value={`${tasaAdjF}%`} sub={`${adjudicadosF} de ${totalF} procesos`} color="blue" />
       </div>
 
       {/* KPIs de competencia */}
@@ -280,6 +305,8 @@ function DashCard({ label, value, sub, color, small }: {
     yellow: 'bg-yellow-50 border-yellow-100 text-yellow-900',
     purple: 'bg-purple-50 border-purple-100 text-purple-900',
     indigo: 'bg-indigo-50 border-indigo-100 text-indigo-900',
+    emerald:'bg-emerald-50 border-emerald-100 text-emerald-900',
+    rose:   'bg-rose-50 border-rose-100 text-rose-900',
   }
   return (
     <div className={`rounded-xl border p-4 ${colors[color]}`}>

@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/use-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { StatusBadge, SectorBadge } from '@/components/shared/StatusBadge'
+import { StatusBadge, SectorBadge, ParticipaBadge } from '@/components/shared/StatusBadge'
 import { ProcesoFormModal } from './ProcesoFormModal'
 import { ProcesoDetailModal } from './ProcesoDetailModal'
 import { formatCurrency, formatDate, exportToCSV } from '@/lib/utils'
@@ -18,9 +18,10 @@ interface ProcesosTableProps {
   initialProcesos: Proceso[]
 }
 
-const ESTADOS: EstadoProceso[] = ['En Evaluación', 'Adjudicado', 'Cancelado', 'Desierto', 'Borrador', 'Pendiente']
+const ESTADOS: EstadoProceso[] = ['En Evaluación', 'Adjudicado', 'Cancelado', 'Desierto', 'Borrador', 'Pendiente', 'Estudio de Mercado', 'A Presentar']
 const SECTORES = ['Público', 'Privado']
 const AÑOS = ['Todos', '2026', '2025', '2024', '2023']
+const PARTICIPACIONES = ['Todos', 'SI', 'NO']
 const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
 const CATEGORIAS = ['INSUMOS DE ASEO','INSUMOS DE ASEO Y CAFETERIA','INSUMOS DE CAFETERIA','INSUMOS DE PAPELERÍA','INSUMOS DE PROTECCION PERSONAL','INSUMOS DEPORTIVOS','INSUMOS LUDICOS','SUMINISTRO DE ASEO','SUMINISTRO DE FERRETERÍA','SUMINISTRO DE HIGIENE','SUMINISTRO DE MERCADOS','SUMINISTRO DE TECNOLOGÍA','SUMINISTRO MOBILIARIO']
 const PAGE_SIZE = 10
@@ -33,6 +34,7 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
   const [filterSector, setFilterSector] = useState('Todos')
   const [filterMes, setFilterMes] = useState('Todos')
   const [filterCategoria, setFilterCategoria] = useState('Todos')
+  const [filterParticipa, setFilterParticipa] = useState('Todos')
   const [page, setPage] = useState(1)
   const [selectedProceso, setSelectedProceso] = useState<Proceso | null>(null)
   const [viewProceso, setViewProceso] = useState<Proceso | null>(null)
@@ -60,23 +62,30 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
       const matchSector = filterSector === 'Todos' || p.sector === filterSector
       const matchMes = filterMes === 'Todos' || (p.mes_publicacion ?? '').toUpperCase() === filterMes
       const matchCategoria = filterCategoria === 'Todos' || p.categoria === filterCategoria
+      const matchParticipa = filterParticipa === 'Todos' || (p.participa ?? 'SI') === filterParticipa
 
-      return matchSearch && matchAño && matchEstado && matchSector && matchMes && matchCategoria
+      return matchSearch && matchAño && matchEstado && matchSector && matchMes && matchCategoria && matchParticipa
     })
-  }, [procesos, search, filterAño, filterEstado, filterSector, filterMes, filterCategoria])
+  }, [procesos, search, filterAño, filterEstado, filterSector, filterMes, filterCategoria, filterParticipa])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  const hasFilters = search || filterAño !== 'Todos' || filterEstado !== 'Todos' || filterSector !== 'Todos' || filterMes !== 'Todos' || filterCategoria !== 'Todos'
+  const hasFilters = search || filterAño !== 'Todos' || filterEstado !== 'Todos' || filterSector !== 'Todos' || filterMes !== 'Todos' || filterCategoria !== 'Todos' || filterParticipa !== 'Todos'
 
   // Métricas del resultado filtrado
-  const metricasFiltradas = useMemo(() => ({
-    total:        filtered.length,
-    adjudicados:  filtered.filter((p) => p.estado_proceso === 'Adjudicado').length,
-    enEvaluacion: filtered.filter((p) => p.estado_proceso === 'En Evaluación').length,
-    cuantiaTotal: filtered.reduce((s, p) => s + (p.cuantia_proceso ?? 0), 0),
-  }), [filtered])
+  const metricasFiltradas = useMemo(() => {
+    const participados = filtered.filter((p) => (p.participa ?? 'SI') === 'SI').length
+    return {
+      total:        filtered.length,
+      adjudicados:  filtered.filter((p) => p.estado_proceso === 'Adjudicado').length,
+      enEvaluacion: filtered.filter((p) => p.estado_proceso === 'En Evaluación').length,
+      cuantiaTotal: filtered.reduce((s, p) => s + (p.cuantia_proceso ?? 0), 0),
+      participados,
+      noParticipados: filtered.length - participados,
+      tasaParticipacion: filtered.length > 0 ? Math.round((participados / filtered.length) * 100) : 0,
+    }
+  }, [filtered])
 
   const clearFilters = () => {
     setSearch('')
@@ -85,6 +94,7 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
     setFilterSector('Todos')
     setFilterMes('Todos')
     setFilterCategoria('Todos')
+    setFilterParticipa('Todos')
     setPage(1)
   }
 
@@ -139,6 +149,30 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
         <SummaryCard label="Adjudicados"  value={metricasFiltradas.adjudicados}  color="green" />
         <SummaryCard label="En Evaluación" value={metricasFiltradas.enEvaluacion} color="yellow" />
         <SummaryCard label="Cuantía"      value={formatCurrency(metricasFiltradas.cuantiaTotal)} color="purple" small />
+      </div>
+      <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 mb-4">
+        <SummaryCard
+          label="Participados"
+          value={`${metricasFiltradas.participados} (${metricasFiltradas.tasaParticipacion}%)`}
+          color="emerald"
+          small
+        />
+        <SummaryCard
+          label="No Participados"
+          value={metricasFiltradas.noParticipados}
+          color="rose"
+          small
+        />
+        <SummaryCard
+          label="Tasa Adj. / Participados"
+          value={
+            metricasFiltradas.participados > 0
+              ? `${Math.round((metricasFiltradas.adjudicados / metricasFiltradas.participados) * 100)}%`
+              : '—'
+          }
+          color="indigo"
+          small
+        />
       </div>
 
       {/* Controles */}
@@ -206,6 +240,18 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
               {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
 
+            {/* Filtro Participación */}
+            <select
+              value={filterParticipa}
+              onChange={(e) => { setFilterParticipa(e.target.value); setPage(1) }}
+              className="h-9 px-3 text-sm border border-gray-200 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              title="Filtrar por participación de Melan"
+            >
+              <option value="Todos">Toda participación</option>
+              <option value="SI">Participó</option>
+              <option value="NO">No participó</option>
+            </select>
+
             {hasFilters && (
               <Button variant="ghost" size="sm" onClick={clearFilters} className="text-gray-500 gap-1">
                 <X className="h-4 w-4" />Limpiar
@@ -244,6 +290,7 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Categoría</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Objeto</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Sector</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">Participación</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Estado</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Cuantía</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Fecha Pub.</th>
@@ -254,7 +301,7 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
             <tbody className="divide-y divide-gray-50">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-16 text-center">
+                  <td colSpan={10} className="px-4 py-16 text-center">
                     <div className="text-5xl mb-3">🔍</div>
                     <p className="text-gray-500 font-medium">No se encontraron procesos</p>
                     <p className="text-gray-400 text-sm mt-1">
@@ -298,6 +345,9 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
                     </td>
                     <td className="px-4 py-3">
                       <SectorBadge sector={proceso.sector} />
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <ParticipaBadge participa={proceso.participa ?? 'SI'} />
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge estado={proceso.estado_proceso} />
@@ -416,6 +466,9 @@ function SummaryCard({ label, value, color, small }: {
     green:  'bg-green-50 border-green-100 text-green-900',
     yellow: 'bg-yellow-50 border-yellow-100 text-yellow-900',
     purple: 'bg-purple-50 border-purple-100 text-purple-900',
+    emerald:'bg-emerald-50 border-emerald-100 text-emerald-900',
+    rose:   'bg-rose-50 border-rose-100 text-rose-900',
+    indigo: 'bg-indigo-50 border-indigo-100 text-indigo-900',
   }
   return (
     <div className={`rounded-xl border p-4 ${colors[color]}`}>

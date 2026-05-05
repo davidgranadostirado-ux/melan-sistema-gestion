@@ -14,16 +14,18 @@ interface EstadisticasClientProps {
 }
 
 const ESTADO_COLORS: Record<string, string> = {
-  'Adjudicado':    '#059669',
-  'En Evaluación': '#d97706',
-  'Cancelado':     '#dc2626',
-  'Desierto':      '#6b7280',
-  'Borrador':      '#7c3aed',
-  'Pendiente':     '#1a56db',
+  'Adjudicado':          '#059669',
+  'En Evaluación':       '#d97706',
+  'Cancelado':           '#dc2626',
+  'Desierto':            '#6b7280',
+  'Borrador':            '#7c3aed',
+  'Pendiente':           '#1a56db',
+  'Estudio de Mercado':  '#0891b2',
+  'A Presentar':         '#ea580c',
 }
 const FUENTE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4']
 const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
-const ESTADOS: EstadoProceso[] = ['En Evaluación','Adjudicado','Cancelado','Desierto','Borrador','Pendiente']
+const ESTADOS: EstadoProceso[] = ['En Evaluación','Adjudicado','Cancelado','Desierto','Borrador','Pendiente','Estudio de Mercado','A Presentar']
 const CATEGORIAS = ['INSUMOS DE ASEO','INSUMOS DE ASEO Y CAFETERIA','INSUMOS DE CAFETERIA','INSUMOS DE PAPELERÍA','INSUMOS DE PROTECCION PERSONAL','INSUMOS DEPORTIVOS','INSUMOS LUDICOS','SUMINISTRO DE ASEO','SUMINISTRO DE FERRETERÍA','SUMINISTRO DE HIGIENE','SUMINISTRO DE MERCADOS','SUMINISTRO DE TECNOLOGÍA','SUMINISTRO MOBILIARIO']
 
 export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
@@ -32,17 +34,18 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
   const [filterEstado, setFilterEstado] = useState('Todos')
   const [filterCategoria, setFilterCategoria] = useState('Todos')
   const [filterSector, setFilterSector] = useState('Todos')
+  const [filterParticipa, setFilterParticipa] = useState('Todos')
 
   const años = useMemo(() => {
     const set = new Set(procesos.map((p) => String(p.año_publicacion)).filter(Boolean))
     return ['Todos', ...Array.from(set).sort((a, b) => Number(b) - Number(a))]
   }, [procesos])
 
-  const hasFilters = filterAño !== 'Todos' || filterMes !== 'Todos' || filterEstado !== 'Todos' || filterCategoria !== 'Todos' || filterSector !== 'Todos'
+  const hasFilters = filterAño !== 'Todos' || filterMes !== 'Todos' || filterEstado !== 'Todos' || filterCategoria !== 'Todos' || filterSector !== 'Todos' || filterParticipa !== 'Todos'
 
   const clearFilters = () => {
     setFilterAño('Todos'); setFilterMes('Todos'); setFilterEstado('Todos')
-    setFilterCategoria('Todos'); setFilterSector('Todos')
+    setFilterCategoria('Todos'); setFilterSector('Todos'); setFilterParticipa('Todos')
   }
 
   const filtered = useMemo(() => procesos.filter((p) => {
@@ -51,8 +54,9 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
     if (filterEstado !== 'Todos' && p.estado_proceso !== filterEstado) return false
     if (filterCategoria !== 'Todos' && p.categoria !== filterCategoria) return false
     if (filterSector !== 'Todos' && p.sector !== filterSector) return false
+    if (filterParticipa !== 'Todos' && (p.participa ?? 'SI') !== filterParticipa) return false
     return true
-  }), [procesos, filterAño, filterMes, filterEstado, filterCategoria, filterSector])
+  }), [procesos, filterAño, filterMes, filterEstado, filterCategoria, filterSector, filterParticipa])
 
   // Por estado
   const estadoData = Object.entries(
@@ -132,6 +136,13 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
   const cuantiaTotal = filtered.reduce((s, p) => s + (p.cuantia_proceso ?? 0), 0)
   const tasaAdj      = total > 0 ? ((adjudicados / total) * 100).toFixed(1) : '0'
 
+  // Métricas de Participación
+  const participados   = filtered.filter((p) => (p.participa ?? 'SI') === 'SI').length
+  const noParticipados = total - participados
+  const tasaParticip   = total > 0 ? ((participados / total) * 100).toFixed(1) : '0'
+  const adjDeParticip  = filtered.filter((p) => (p.participa ?? 'SI') === 'SI' && p.estado_proceso === 'Adjudicado').length
+  const tasaExito      = participados > 0 ? ((adjDeParticip / participados) * 100).toFixed(1) : '0'
+
   // KPIs de competencia
   const conParticipantes = filtered.filter((p) => p.cantidad_participantes != null && p.cantidad_participantes > 0)
   const avgParticipantes = conParticipantes.length > 0
@@ -153,6 +164,14 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
         <StatCard label="Tasa de Adjudicación"    value={`${tasaAdj}%`}             color="green"  sub={`${adjudicados} adjudicados`} />
         <StatCard label="Cuantía Total"           value={formatCurrency(cuantiaTotal)} color="purple" sub="Suma filtrada" small />
         <StatCard label="Cancelados / Desiertos"  value={cancelados + desiertos}    color="red"    sub={`${cancelados} cancel. · ${desiertos} desiert.`} />
+      </div>
+
+      {/* Tarjetas de Participación */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard label="Participados"      value={`${participados} (${tasaParticip}%)`} color="emerald" sub={`${noParticipados} no participados`} />
+        <StatCard label="No Participados"   value={noParticipados}                        color="rose"    sub="No se presentó oferta" />
+        <StatCard label="Tasa de Éxito"     value={`${tasaExito}%`}                       color="indigo"  sub={`${adjDeParticip} adj. de ${participados} part.`} />
+        <StatCard label="Eficiencia Global" value={participados > 0 ? `${((adjDeParticip / total) * 100).toFixed(1)}%` : '0%'} color="purple" sub="Adjudicados / Total" small />
       </div>
 
       {/* KPIs de competencia */}
@@ -198,6 +217,12 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
           <select value={filterCategoria} onChange={(e) => setFilterCategoria(e.target.value)} className={selectClass}>
             <option value="Todos">Todas las categorías</option>
             {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+
+          <select value={filterParticipa} onChange={(e) => setFilterParticipa(e.target.value)} className={selectClass} title="Participación de Melan">
+            <option value="Todos">Toda participación</option>
+            <option value="SI">Participó</option>
+            <option value="NO">No participó</option>
           </select>
 
           {hasFilters && (
@@ -354,6 +379,8 @@ function StatCard({ label, value, color, sub, small }: {
     purple: 'bg-purple-50 border-purple-100 text-purple-900',
     red:    'bg-red-50 border-red-100 text-red-900',
     indigo: 'bg-indigo-50 border-indigo-100 text-indigo-900',
+    emerald:'bg-emerald-50 border-emerald-100 text-emerald-900',
+    rose:   'bg-rose-50 border-rose-100 text-rose-900',
   }
   return (
     <div className={`rounded-xl border p-5 ${colorClasses[color]}`}>

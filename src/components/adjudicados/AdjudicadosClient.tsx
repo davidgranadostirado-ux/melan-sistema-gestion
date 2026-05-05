@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
-import { SumicorpBadge } from '@/components/shared/StatusBadge'
+import { SumicorpBadge, ParticipaBadge } from '@/components/shared/StatusBadge'
 import { ProcesoDetailModal } from '@/components/procesos/ProcesoDetailModal'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import type { Proceso } from '@/types'
@@ -14,24 +14,29 @@ interface AdjudicadosClientProps {
 
 export function AdjudicadosClient({ procesos }: AdjudicadosClientProps) {
   const [search, setSearch] = useState('')
+  const [filterParticipa, setFilterParticipa] = useState('Todos')
   const [viewProceso, setViewProceso] = useState<Proceso | null>(null)
 
   const filtered = useMemo(() => {
-    if (!search) return procesos
-    return procesos.filter(
-      (p) =>
+    return procesos.filter((p) => {
+      const matchSearch = !search ||
         p.entidad.toLowerCase().includes(search.toLowerCase()) ||
         p.objeto_proceso.toLowerCase().includes(search.toLowerCase()) ||
         (p.proponente_ganador ?? '').toLowerCase().includes(search.toLowerCase())
-    )
-  }, [procesos, search])
+      const matchParticipa = filterParticipa === 'Todos' || (p.participa ?? 'SI') === filterParticipa
+      return matchSearch && matchParticipa
+    })
+  }, [procesos, search, filterParticipa])
+
+  const adjMelan = filtered.filter((p) => (p.participa ?? 'SI') === 'SI').length
+  const adjOtros = filtered.length - adjMelan
 
   return (
     <>
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-        {/* Búsqueda */}
-        <div className="px-5 py-4 border-b border-gray-100">
-          <div className="relative max-w-sm">
+        {/* Búsqueda y filtros */}
+        <div className="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Buscar adjudicados..."
@@ -40,11 +45,24 @@ export function AdjudicadosClient({ procesos }: AdjudicadosClientProps) {
               className="pl-9 h-9 text-sm"
             />
           </div>
+          <select
+            value={filterParticipa}
+            onChange={(e) => setFilterParticipa(e.target.value)}
+            className="h-9 px-3 text-sm border border-gray-200 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            title="Participación de Melan"
+          >
+            <option value="Todos">Toda participación</option>
+            <option value="SI">Melan participó</option>
+            <option value="NO">Melan no participó</option>
+          </select>
         </div>
 
-        <div className="px-5 py-2.5 bg-gray-50 border-b border-gray-100">
+        <div className="px-5 py-2.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
           <span className="text-sm text-gray-600">
             <span className="font-semibold text-gray-900">{filtered.length}</span> procesos adjudicados
+          </span>
+          <span className="text-xs text-gray-500">
+            <span className="text-emerald-700 font-semibold">{adjMelan}</span> con participación · <span className="text-rose-700 font-semibold">{adjOtros}</span> sin participación
           </span>
         </div>
 
@@ -55,6 +73,7 @@ export function AdjudicadosClient({ procesos }: AdjudicadosClientProps) {
               <tr className="bg-gray-50">
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Entidad</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Objeto</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">Participación</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Proponente Ganador</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Cuantía</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Valor</th>
@@ -66,7 +85,7 @@ export function AdjudicadosClient({ procesos }: AdjudicadosClientProps) {
             <tbody className="divide-y divide-gray-50">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-16 text-center">
+                  <td colSpan={9} className="px-4 py-16 text-center">
                     <div className="text-5xl mb-3">🏆</div>
                     <p className="text-gray-500">No hay procesos adjudicados{search ? ' con esa búsqueda' : ''}</p>
                   </td>
@@ -80,6 +99,9 @@ export function AdjudicadosClient({ procesos }: AdjudicadosClientProps) {
                     </td>
                     <td className="px-4 py-3">
                       <p className="text-gray-700 max-w-[200px] truncate">{proceso.objeto_proceso}</p>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <ParticipaBadge participa={proceso.participa ?? 'SI'} />
                     </td>
                     <td className="px-4 py-3">
                       <p className="text-gray-700 max-w-[150px] truncate">{proceso.proponente_ganador ?? '-'}</p>

@@ -19,6 +19,8 @@ export type EstadoProceso =
   | 'Desierto'
   | 'Borrador'
   | 'Pendiente'
+  | 'Estudio de Mercado'
+  | 'A Presentar'
 export type SumicorpCumple = 'SI' | 'NO' | 'PENDIENTE'
 export type Participa = 'SI' | 'NO'
 
