@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { SumicorpBadge, ParticipaBadge } from '@/components/shared/StatusBadge'
 import { ProcesoDetailModal } from '@/components/procesos/ProcesoDetailModal'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, formatDate, ganadoPorMelan } from '@/lib/utils'
 import type { Proceso } from '@/types'
 import { Search, Eye } from 'lucide-react'
 
@@ -28,8 +28,8 @@ export function AdjudicadosClient({ procesos }: AdjudicadosClientProps) {
     })
   }, [procesos, search, filterParticipa])
 
-  const adjMelan = filtered.filter((p) => (p.participa ?? 'SI') === 'SI').length
-  const adjOtros = filtered.length - adjMelan
+  const ganadosMelan = filtered.filter((p) => ganadoPorMelan(p.proponente_ganador)).length
+  const adjOtros     = filtered.length - ganadosMelan
 
   return (
     <>
@@ -62,7 +62,7 @@ export function AdjudicadosClient({ procesos }: AdjudicadosClientProps) {
             <span className="font-semibold text-gray-900">{filtered.length}</span> procesos adjudicados
           </span>
           <span className="text-xs text-gray-500">
-            <span className="text-emerald-700 font-semibold">{adjMelan}</span> con participación · <span className="text-rose-700 font-semibold">{adjOtros}</span> sin participación
+            <span className="text-emerald-700 font-semibold">{ganadosMelan}</span> ganados por Melan · <span className="text-rose-700 font-semibold">{adjOtros}</span> ganados por otros
           </span>
         </div>
 
@@ -91,43 +91,55 @@ export function AdjudicadosClient({ procesos }: AdjudicadosClientProps) {
                   </td>
                 </tr>
               ) : (
-                filtered.map((proceso) => (
-                  <tr key={proceso.id} className="hover:bg-green-50/30 transition-colors">
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900 max-w-[160px] truncate">{proceso.entidad}</p>
-                      <p className="text-xs text-gray-500">{proceso.departamento_ejecucion}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-gray-700 max-w-[200px] truncate">{proceso.objeto_proceso}</p>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <ParticipaBadge participa={proceso.participa ?? 'SI'} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-gray-700 max-w-[150px] truncate">{proceso.proponente_ganador ?? '-'}</p>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <span className="font-semibold text-gray-900 whitespace-nowrap">{formatCurrency(proceso.cuantia_proceso)}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <span className="font-medium text-purple-700 whitespace-nowrap">{proceso.valor_ofertado_sumicorp ? formatCurrency(proceso.valor_ofertado_sumicorp) : '-'}</span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <SumicorpBadge cumple={proceso.sumicorp_cumple} />
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
-                      {formatDate(proceso.fecha_publicacion)}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => setViewProceso(proceso)}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                filtered.map((proceso) => {
+                  const esGanador = ganadoPorMelan(proceso.proponente_ganador)
+                  return (
+                    <tr key={proceso.id} className={esGanador ? 'bg-emerald-50/40 hover:bg-emerald-50' : 'hover:bg-green-50/30 transition-colors'}>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-gray-900 max-w-[160px] truncate">{proceso.entidad}</p>
+                        <p className="text-xs text-gray-500">{proceso.departamento_ejecucion}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-gray-700 max-w-[200px] truncate">{proceso.objeto_proceso}</p>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <ParticipaBadge participa={proceso.participa ?? 'SI'} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <p className={`max-w-[150px] truncate text-sm ${esGanador ? 'text-emerald-800 font-semibold' : 'text-gray-700'}`}>
+                            {proceso.proponente_ganador ?? '—'}
+                          </p>
+                          {esGanador && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 flex-shrink-0">
+                              MELAN
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="font-semibold text-gray-900 whitespace-nowrap">{formatCurrency(proceso.cuantia_proceso)}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="font-medium text-purple-700 whitespace-nowrap">{proceso.valor_ofertado_sumicorp ? formatCurrency(proceso.valor_ofertado_sumicorp) : '—'}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <SumicorpBadge cumple={proceso.sumicorp_cumple} />
+                      </td>
+                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                        {formatDate(proceso.fecha_publicacion)}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => setViewProceso(proceso)}
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>

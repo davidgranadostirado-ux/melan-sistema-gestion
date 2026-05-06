@@ -80,6 +80,17 @@ export const MESES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ]
 
+/**
+ * Determina si un proceso fue ganado por Melan.
+ * Se considera ganado si el `proponente_ganador` contiene la palabra "MELAN" (case-insensitive).
+ * No depende del estado_proceso porque puede haber procesos adjudicados
+ * a otras empresas (Melan participó pero perdió).
+ */
+export function ganadoPorMelan(proponenteGanador?: string | null): boolean {
+  if (!proponenteGanador) return false
+  return /\bmelan\b/i.test(proponenteGanador)
+}
+
 export const DEPARTAMENTOS_COLOMBIA = [
   'Amazonas', 'Antioquia', 'Arauca', 'Atlántico', 'Bolívar', 'Boyacá',
   'Caldas', 'Caquetá', 'Casanare', 'Cauca', 'Cesar', 'Chocó', 'Córdoba',

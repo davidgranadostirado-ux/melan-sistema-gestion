@@ -6,7 +6,7 @@ import {
   PieChart, Pie, Cell, Legend, LineChart, Line,
 } from 'recharts'
 import type { Proceso, EstadoProceso } from '@/types'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, ganadoPorMelan } from '@/lib/utils'
 import { X } from 'lucide-react'
 
 interface ChartsSectionProps {
@@ -119,12 +119,12 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
   const cuantiaF     = filtered.reduce((s, p) => s + (p.cuantia_proceso ?? 0), 0)
   const tasaAdjF     = totalF > 0 ? Math.round((adjudicadosF / totalF) * 100) : 0
 
-  // Métricas de participación
+  // Métricas de participación + ganados por Melan (proponente_ganador = MELAN)
   const participadosF    = filtered.filter((p) => (p.participa ?? 'SI') === 'SI').length
   const noParticipadosF  = totalF - participadosF
   const tasaParticipF    = totalF > 0 ? Math.round((participadosF / totalF) * 100) : 0
-  const adjDeParticipF   = filtered.filter((p) => (p.participa ?? 'SI') === 'SI' && p.estado_proceso === 'Adjudicado').length
-  const tasaExitoF       = participadosF > 0 ? Math.round((adjDeParticipF / participadosF) * 100) : 0
+  const ganadosMelanF    = filtered.filter((p) => (p.participa ?? 'SI') === 'SI' && ganadoPorMelan(p.proponente_ganador)).length
+  const tasaExitoF       = participadosF > 0 ? Math.round((ganadosMelanF / participadosF) * 100) : 0
 
   // KPIs de competencia
   const conParticipantes = filtered.filter((p) => p.cantidad_participantes != null && p.cantidad_participantes > 0)
@@ -192,12 +192,12 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
         <DashCard label="Cuantía Total"       value={formatCurrency(cuantiaF)}    sub="Suma filtrada"                                    color="purple" small />
       </div>
 
-      {/* Tarjetas de Participación */}
+      {/* Tarjetas de Participación + Ganados por Melan */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <DashCard label="Participados" value={`${participadosF} (${tasaParticipF}%)`} sub={`${noParticipadosF} no participados`} color="emerald" />
-        <DashCard label="No Participados" value={noParticipadosF} sub="Procesos no presentados" color="rose" />
-        <DashCard label="Tasa de Éxito" value={`${tasaExitoF}%`} sub={`${adjDeParticipF} adj. de ${participadosF} part.`} color="indigo" />
-        <DashCard label="Adjudicados / Total" value={`${tasaAdjF}%`} sub={`${adjudicadosF} de ${totalF} procesos`} color="blue" />
+        <DashCard label="Ganados por Melan" value={ganadosMelanF} sub={`${tasaExitoF}% tasa de éxito`} color="green" />
+        <DashCard label="No Ganados" value={participadosF - ganadosMelanF} sub="Adjudicados a otros / en juego" color="rose" />
+        <DashCard label="Adjudicados (Total)" value={`${adjudicadosF} (${tasaAdjF}%)`} sub="Cualquier ganador" color="indigo" />
       </div>
 
       {/* KPIs de competencia */}

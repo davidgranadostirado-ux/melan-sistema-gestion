@@ -6,7 +6,7 @@ import {
   PieChart, Pie, Cell, Legend, LineChart, Line,
 } from 'recharts'
 import type { Proceso } from '@/types'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, formatDate, ganadoPorMelan } from '@/lib/utils'
 import { ParticipaBadge, StatusBadge } from '@/components/shared/StatusBadge'
 import { ProcesoDetailModal } from '@/components/procesos/ProcesoDetailModal'
 import { TrendingUp, Target, Award, AlertCircle, X, Eye } from 'lucide-react'
@@ -47,23 +47,32 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
   }), [procesos, filterAño, filterMes, filterSector])
 
   // ─── Métricas globales ─────────────────────────────────
+  // Reglas:
+  // - Ganado por Melan = proponente_ganador contiene "MELAN" (NO depende de estado_proceso)
+  // - Adjudicados a otros = estado Adjudicado pero ganador NO es Melan
+  // - Perdidos = participados + estado adjudicado/cancelado/desierto, ganador != Melan
   const total          = filtered.length
   const participados   = filtered.filter((p) => (p.participa ?? 'SI') === 'SI')
   const noParticipados = filtered.filter((p) => (p.participa ?? 'SI') === 'NO')
 
-  const adjudicadosTotal = filtered.filter((p) => p.estado_proceso === 'Adjudicado').length
-  const adjudicadosMelan = participados.filter((p) => p.estado_proceso === 'Adjudicado').length
-  const perdidos         = participados.filter((p) => p.estado_proceso !== 'Adjudicado' && p.estado_proceso !== 'Pendiente' && p.estado_proceso !== 'Borrador').length
+  const ganadosMelan       = participados.filter((p) => ganadoPorMelan(p.proponente_ganador))
+  const adjudicadosOtros   = filtered.filter((p) => p.estado_proceso === 'Adjudicado' && !ganadoPorMelan(p.proponente_ganador))
+  const perdidosMelan      = participados.filter((p) =>
+    !ganadoPorMelan(p.proponente_ganador) &&
+    ['Adjudicado', 'Cancelado', 'Desierto'].includes(p.estado_proceso)
+  )
+  const enJuegoMelan       = participados.filter((p) =>
+    !ganadoPorMelan(p.proponente_ganador) &&
+    ['En Evaluación', 'Estudio de Mercado', 'A Presentar', 'Pendiente', 'Borrador'].includes(p.estado_proceso)
+  )
 
   const tasaParticipacion = total > 0 ? Math.round((participados.length / total) * 100) : 0
-  const tasaExito         = participados.length > 0 ? Math.round((adjudicadosMelan / participados.length) * 100) : 0
-  const tasaPerdida       = participados.length > 0 ? Math.round((perdidos / participados.length) * 100) : 0
+  const tasaExito         = participados.length > 0 ? Math.round((ganadosMelan.length / participados.length) * 100) : 0
+  const tasaPerdida       = participados.length > 0 ? Math.round((perdidosMelan.length / participados.length) * 100) : 0
 
   const cuantiaParticip = participados.reduce((s, p) => s + (p.cuantia_proceso ?? 0), 0)
-  const cuantiaAdj      = participados.filter((p) => p.estado_proceso === 'Adjudicado')
-    .reduce((s, p) => s + (p.cuantia_proceso ?? 0), 0)
-  const valorOfertado   = participados.filter((p) => p.estado_proceso === 'Adjudicado')
-    .reduce((s, p) => s + (p.valor_ofertado_sumicorp ?? 0), 0)
+  const cuantiaGanada   = ganadosMelan.reduce((s, p) => s + (p.cuantia_proceso ?? 0), 0)
+  const valorOfertado   = ganadosMelan.reduce((s, p) => s + (p.valor_ofertado_sumicorp ?? 0), 0)
 
   // ─── Datos para gráficos ───────────────────────────────
 
@@ -71,7 +80,7 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
   const funnelData = [
     { name: 'Total Procesos',        value: total,                  fill: '#3b82f6' },
     { name: 'Participados',          value: participados.length,    fill: '#10b981' },
-    { name: 'Adjudicados a Melan',   value: adjudicadosMelan,       fill: '#059669' },
+    { name: 'Ganados por Melan',     value: ganadosMelan.length,    fill: '#059669' },
   ]
 
   // 2. Donut Participados vs No
@@ -82,46 +91,59 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
 
   // 3. Donut Resultado de Participados
   const resultadoParticipData = [
-    { name: 'Adjudicado',     value: adjudicadosMelan, fill: '#059669' },
-    { name: 'No Adjudicado',  value: perdidos,         fill: '#dc2626' },
-    {
-      name: 'En Proceso',
-      value: participados.length - adjudicadosMelan - perdidos,
-      fill: '#d97706',
-    },
+    { name: 'Ganados por Melan', value: ganadosMelan.length,     fill: '#059669' },
+    { name: 'Perdidos',          value: perdidosMelan.length,    fill: '#dc2626' },
+    { name: 'En Juego',          value: enJuegoMelan.length,     fill: '#d97706' },
   ].filter((d) => d.value > 0)
 
-  // 4. Mensual: Participados vs Adjudicados
+  // 4. Mensual: Participados vs Ganados
   const mensualData = MESES_SHORT.map((mes, i) => {
-    const part = participados.filter((p) => (p.mes_publicacion ?? '').toUpperCase() === MESES_FULL[i]).length
-    const adj  = participados.filter((p) => (p.mes_publicacion ?? '').toUpperCase() === MESES_FULL[i] && p.estado_proceso === 'Adjudicado').length
-    const noPart = noParticipados.filter((p) => (p.mes_publicacion ?? '').toUpperCase() === MESES_FULL[i]).length
-    return { mes, participados: part, adjudicados: adj, noParticipados: noPart }
+    const mesUpper = MESES_FULL[i]
+    const part   = participados.filter((p) => (p.mes_publicacion ?? '').toUpperCase() === mesUpper).length
+    const won    = ganadosMelan.filter((p) => (p.mes_publicacion ?? '').toUpperCase() === mesUpper).length
+    const adjOt  = adjudicadosOtros.filter((p) => (p.mes_publicacion ?? '').toUpperCase() === mesUpper).length
+    const noPart = noParticipados.filter((p) => (p.mes_publicacion ?? '').toUpperCase() === mesUpper).length
+    return { mes, participados: part, ganados: won, adjudicadosOtros: adjOt, noParticipados: noPart }
   })
 
   // 5. Por sector
   const sectorComparativo = SECTORES.map((sector) => {
     const procSec = filtered.filter((p) => p.sector === sector)
     const partSec = procSec.filter((p) => (p.participa ?? 'SI') === 'SI')
-    const adjSec  = partSec.filter((p) => p.estado_proceso === 'Adjudicado')
+    const ganSec  = partSec.filter((p) => ganadoPorMelan(p.proponente_ganador))
     return {
       name: sector,
       Total: procSec.length,
       Participados: partSec.length,
-      Adjudicados: adjSec.length,
+      'Ganados Melan': ganSec.length,
     }
   })
 
-  // 6. Top entidades con mayor tasa de adjudicación
+  // 6. Top ganadores (competencia) — quién está ganando los procesos en los que Melan participa
+  const topGanadores = useMemo(() => {
+    const map: Record<string, { count: number; cuantia: number }> = {}
+    participados.forEach((p) => {
+      if (p.estado_proceso !== 'Adjudicado') return
+      const g = (p.proponente_ganador ?? 'Sin definir').trim() || 'Sin definir'
+      if (!map[g]) map[g] = { count: 0, cuantia: 0 }
+      map[g].count++
+      map[g].cuantia += p.cuantia_proceso ?? 0
+    })
+    return Object.entries(map)
+      .map(([nombre, v]) => ({ nombre, ...v, esMelan: ganadoPorMelan(nombre) }))
+      .sort((a, b) => b.count - a.count || b.cuantia - a.cuantia)
+  }, [participados])
+
+  // 7. Top entidades con mayor tasa de adjudicación a Melan
   const entidadesStats = useMemo(() => {
-    const map: Record<string, { total: number; participados: number; adjudicados: number }> = {}
+    const map: Record<string, { total: number; participados: number; ganados: number }> = {}
     filtered.forEach((p) => {
       const ent = p.entidad
-      if (!map[ent]) map[ent] = { total: 0, participados: 0, adjudicados: 0 }
+      if (!map[ent]) map[ent] = { total: 0, participados: 0, ganados: 0 }
       map[ent].total++
       if ((p.participa ?? 'SI') === 'SI') {
         map[ent].participados++
-        if (p.estado_proceso === 'Adjudicado') map[ent].adjudicados++
+        if (ganadoPorMelan(p.proponente_ganador)) map[ent].ganados++
       }
     })
     return Object.entries(map)
@@ -130,17 +152,16 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
         entidad: entidad.length > 32 ? entidad.slice(0, 32) + '…' : entidad,
         full: entidad,
         ...v,
-        tasa: v.participados > 0 ? Math.round((v.adjudicados / v.participados) * 100) : 0,
+        tasa: v.participados > 0 ? Math.round((v.ganados / v.participados) * 100) : 0,
       }))
-      .sort((a, b) => b.adjudicados - a.adjudicados || b.participados - a.participados)
+      .sort((a, b) => b.ganados - a.ganados || b.participados - a.participados)
       .slice(0, 8)
   }, [filtered])
 
-  // 7. Lista detallada (Participados que NO se adjudicaron)
+  // 8. Lista detallada — procesos perdidos (participados, adjudicados a otro)
   const oportunidadesPerdidas = participados
-    .filter((p) => ['Cancelado', 'Desierto', 'En Evaluación'].includes(p.estado_proceso))
+    .filter((p) => p.estado_proceso === 'Adjudicado' && !ganadoPorMelan(p.proponente_ganador))
     .sort((a, b) => (b.cuantia_proceso ?? 0) - (a.cuantia_proceso ?? 0))
-    .slice(0, 10)
 
   return (
     <div className="space-y-6">
@@ -157,17 +178,17 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
         <HeroCard
           icon={<Award className="h-6 w-6 text-white" />}
           bg="bg-gradient-to-br from-emerald-600 to-emerald-700"
-          label="Adjudicados a Melan"
-          value={`${adjudicadosMelan} de ${participados.length}`}
-          sub={`${tasaExito}% tasa de éxito al participar`}
+          label="Ganados por Melan"
+          value={`${ganadosMelan.length} de ${participados.length}`}
+          sub={`${tasaExito}% tasa de éxito (proponente_ganador = MELAN)`}
           progress={tasaExito}
         />
         <HeroCard
           icon={<TrendingUp className="h-6 w-6 text-white" />}
           bg="bg-gradient-to-br from-purple-600 to-purple-700"
-          label="Cuantía Adjudicada"
-          value={formatCurrency(cuantiaAdj)}
-          sub={`${formatCurrency(valorOfertado)} valor ofertado total`}
+          label="Cuantía Ganada"
+          value={formatCurrency(cuantiaGanada)}
+          sub={`${formatCurrency(valorOfertado)} valor ofertado en los ganados`}
         />
       </div>
 
@@ -207,13 +228,13 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
 
       {/* ─── KPIs SECUNDARIOS ─── */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <KpiCard label="No Participados" value={noParticipados.length} sub={`${total - participados.length === 0 ? 0 : Math.round((noParticipados.length / total) * 100)}% del total`} color="rose" />
-        <KpiCard label="Perdidos / Cancelados" value={perdidos} sub={`${tasaPerdida}% de los participados`} color="red" />
+        <KpiCard label="Adjudicados a Otros" value={adjudicadosOtros.length} sub="Ganó otra empresa" color="rose" />
+        <KpiCard label="Perdidos por Melan" value={perdidosMelan.length} sub={`${tasaPerdida}% de los participados`} color="red" />
         <KpiCard label="Cuantía Participada" value={formatCurrency(cuantiaParticip)} sub="Total cuantía donde Melan se presentó" color="blue" small />
         <KpiCard
           label="Conversión Global"
-          value={total > 0 ? `${Math.round((adjudicadosMelan / total) * 100)}%` : '0%'}
-          sub={`${adjudicadosMelan} adjudicados / ${total} totales`}
+          value={total > 0 ? `${Math.round((ganadosMelan.length / total) * 100)}%` : '0%'}
+          sub={`${ganadosMelan.length} ganados / ${total} totales`}
           color="indigo"
         />
       </div>
@@ -223,7 +244,7 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
         {/* Funnel */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
           <h3 className="text-base font-semibold text-gray-800 mb-1">Embudo de Conversión</h3>
-          <p className="text-xs text-gray-500 mb-4">Total → Participados → Adjudicados</p>
+          <p className="text-xs text-gray-500 mb-4">Total → Participados → Ganados por Melan</p>
           {funnelData.every((d) => d.value === 0) ? <Empty /> : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={funnelData} layout="vertical" barSize={32}>
@@ -296,7 +317,7 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
         {/* Por sector */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
           <h3 className="text-base font-semibold text-gray-800 mb-1">Comparativa por Sector</h3>
-          <p className="text-xs text-gray-500 mb-4">Total vs Participados vs Adjudicados</p>
+          <p className="text-xs text-gray-500 mb-4">Total vs Participados vs Ganados por Melan</p>
           {sectorComparativo.every((s) => s.Total === 0) ? <Empty /> : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={sectorComparativo} barSize={28}>
@@ -305,9 +326,9 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="Total"        fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Participados" fill="#10b981" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Adjudicados"  fill="#059669" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Total"           fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Participados"    fill="#10b981" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Ganados Melan"   fill="#059669" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -316,7 +337,7 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
         {/* Mensual */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm xl:col-span-2">
           <h3 className="text-base font-semibold text-gray-800 mb-1">Evolución Mensual</h3>
-          <p className="text-xs text-gray-500 mb-4">Participados vs Adjudicados a lo largo del año</p>
+          <p className="text-xs text-gray-500 mb-4">Participados, Ganados por Melan y Adjudicados a otros</p>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={mensualData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -324,17 +345,73 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="participados"   name="Participados"     stroke="#10b981" strokeWidth={2.5} dot={{ r: 4 }} />
-              <Line type="monotone" dataKey="adjudicados"    name="Adjudicados"      stroke="#059669" strokeWidth={2.5} dot={{ r: 4 }} />
-              <Line type="monotone" dataKey="noParticipados" name="No Participados"  stroke="#f43f5e" strokeWidth={2}   dot={{ r: 3 }} strokeDasharray="5 5" />
+              <Line type="monotone" dataKey="participados"      name="Participados"        stroke="#10b981" strokeWidth={2.5} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="ganados"           name="Ganados Melan"       stroke="#059669" strokeWidth={2.5} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="adjudicadosOtros"  name="Adjudicados a otros" stroke="#dc2626" strokeWidth={2}   dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="noParticipados"    name="No Participados"     stroke="#f43f5e" strokeWidth={2}   dot={{ r: 3 }} strokeDasharray="5 5" />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
+        {/* Top Ganadores (competencia) */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm xl:col-span-2">
+          <h3 className="text-base font-semibold text-gray-800 mb-1">Ganadores de los Procesos en que Melan Participó</h3>
+          <p className="text-xs text-gray-500 mb-4">Quién está ganando: empresas que se llevan los procesos donde Melan se presentó</p>
+          {topGanadores.length === 0 ? <Empty /> : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">#</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Proponente Ganador</th>
+                    <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Procesos Ganados</th>
+                    <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Cuantía Total</th>
+                    <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">% del Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {topGanadores.map((g, idx) => {
+                    const totalAdj = topGanadores.reduce((s, x) => s + x.count, 0)
+                    const pct = totalAdj > 0 ? Math.round((g.count / totalAdj) * 100) : 0
+                    return (
+                      <tr key={g.nombre} className={g.esMelan ? 'bg-emerald-50/40' : 'hover:bg-gray-50'}>
+                        <td className="px-4 py-2 text-gray-400 text-xs font-mono">{idx + 1}</td>
+                        <td className="px-4 py-2">
+                          <div className="flex items-center gap-2">
+                            <span className={`font-medium ${g.esMelan ? 'text-emerald-800' : 'text-gray-800'}`}>{g.nombre}</span>
+                            {g.esMelan && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                MELAN
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-2 text-right font-semibold text-gray-900">{g.count}</td>
+                        <td className="px-4 py-2 text-right font-medium text-gray-700 whitespace-nowrap">{formatCurrency(g.cuantia)}</td>
+                        <td className="px-4 py-2 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <div className="w-24 bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${g.esMelan ? 'bg-emerald-500' : 'bg-rose-400'}`}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-semibold text-gray-600 w-10 text-right">{pct}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
         {/* Top Entidades */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm xl:col-span-2">
-          <h3 className="text-base font-semibold text-gray-800 mb-1">Top Entidades — Participación vs Adjudicación</h3>
-          <p className="text-xs text-gray-500 mb-4">Top 8 entidades con más adjudicaciones</p>
+          <h3 className="text-base font-semibold text-gray-800 mb-1">Top Entidades — Tasa de Éxito de Melan</h3>
+          <p className="text-xs text-gray-500 mb-4">Top 8 entidades ordenadas por procesos ganados por Melan</p>
           {entidadesStats.length === 0 ? <Empty /> : (
             <div className="space-y-2">
               {entidadesStats.map((e) => (
@@ -346,7 +423,7 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
                       <span>·</span>
                       <span className="text-emerald-700">{e.participados} participados</span>
                       <span>·</span>
-                      <span className="text-emerald-900 font-semibold">{e.adjudicados} adjudicados</span>
+                      <span className="text-emerald-900 font-semibold">{e.ganados} ganados</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 w-48 flex-shrink-0">
@@ -365,18 +442,127 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
         </div>
       </div>
 
-      {/* ─── OPORTUNIDADES PERDIDAS ─── */}
+      {/* ─── DETALLE: PROCESOS PARTICIPADOS Y SU GANADOR ─── */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Award className="h-5 w-5 text-emerald-600" />
+            <div>
+              <h3 className="text-base font-semibold text-gray-800">Detalle por Proceso — Quién Ganó</h3>
+              <p className="text-xs text-gray-500">Todos los procesos en los que Melan participó, con el proponente ganador real</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full font-semibold">
+              {ganadosMelan.length} ganados
+            </span>
+            <span className="text-xs px-2 py-0.5 bg-rose-50 text-rose-700 rounded-full font-semibold">
+              {perdidosMelan.length} perdidos
+            </span>
+            <span className="text-xs px-2 py-0.5 bg-yellow-50 text-yellow-700 rounded-full font-semibold">
+              {enJuegoMelan.length} en juego
+            </span>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Entidad / Proceso</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Objeto</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Proponente Ganador</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">Estado</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Cuantía</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Valor Melan</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">Pos.</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Fecha</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">Ver</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {participados
+                .sort((a, b) => (b.cuantia_proceso ?? 0) - (a.cuantia_proceso ?? 0))
+                .map((p) => {
+                  const esGanador = ganadoPorMelan(p.proponente_ganador)
+                  return (
+                    <tr key={p.id} className={esGanador ? 'bg-emerald-50/40 hover:bg-emerald-50' : 'hover:bg-gray-50 transition-colors'}>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-gray-900 max-w-[200px] truncate">{p.entidad}</p>
+                        <p className="text-xs text-gray-500 font-mono">{p.numero_proceso ?? '—'}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-gray-700 max-w-[260px] truncate">{p.objeto_proceso}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        {p.proponente_ganador ? (
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-medium ${esGanador ? 'text-emerald-800' : 'text-gray-700'} max-w-[200px] truncate`}>
+                              {p.proponente_ganador}
+                            </span>
+                            {esGanador && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 flex-shrink-0">
+                                MELAN
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-xs italic">Sin definir</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <StatusBadge estado={p.estado_proceso} />
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap font-semibold text-gray-900">
+                        {formatCurrency(p.cuantia_proceso)}
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap text-purple-700">
+                        {p.valor_ofertado_sumicorp ? formatCurrency(p.valor_ofertado_sumicorp) : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {p.posicion != null ? (
+                          <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
+                            p.posicion === 1 ? 'bg-yellow-100 text-yellow-800' :
+                            p.posicion === 2 ? 'bg-gray-200 text-gray-700' :
+                            p.posicion === 3 ? 'bg-orange-100 text-orange-800' :
+                            'bg-gray-100 text-gray-600'
+                          }`}>
+                            {p.posicion}
+                          </span>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                        {formatDate(p.fecha_publicacion)}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => setView(p)}
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ─── PERDIDOS POR MAYOR CUANTÍA (alerta) ─── */}
       {oportunidadesPerdidas.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div className="bg-white rounded-xl border border-rose-200 shadow-sm">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-rose-50/50">
             <div className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-rose-500" />
               <div>
-                <h3 className="text-base font-semibold text-gray-800">Procesos Participados sin Adjudicar</h3>
-                <p className="text-xs text-gray-500">Top 10 procesos donde Melan participó pero no se adjudicó (mayor cuantía primero)</p>
+                <h3 className="text-base font-semibold text-gray-800">Top Procesos Perdidos por Cuantía</h3>
+                <p className="text-xs text-gray-500">Procesos en los que Melan participó, fueron adjudicados a otro proponente</p>
               </div>
             </div>
-            <span className="text-xs px-2 py-0.5 bg-rose-50 text-rose-700 rounded-full font-semibold">
+            <span className="text-xs px-2 py-0.5 bg-rose-100 text-rose-700 rounded-full font-semibold">
               {oportunidadesPerdidas.length}
             </span>
           </div>
@@ -385,43 +571,26 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
               <thead>
                 <tr className="bg-gray-50">
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Entidad</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Objeto</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">Estado</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">Participación</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Ganó</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Cuantía</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Fecha</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">Ver</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {oportunidadesPerdidas.map((p) => (
-                  <tr key={p.id} className="hover:bg-rose-50/30 transition-colors">
+                {oportunidadesPerdidas.slice(0, 10).map((p) => (
+                  <tr key={p.id} className="hover:bg-rose-50/30 transition-colors cursor-pointer" onClick={() => setView(p)}>
                     <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900 max-w-[180px] truncate">{p.entidad}</p>
-                      <p className="text-xs text-gray-500">{p.numero_proceso ?? '—'}</p>
+                      <p className="font-medium text-gray-900 max-w-[220px] truncate">{p.entidad}</p>
+                      <p className="text-xs text-gray-500 max-w-[220px] truncate">{p.objeto_proceso}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-gray-700 max-w-[260px] truncate">{p.objeto_proceso}</p>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <StatusBadge estado={p.estado_proceso} />
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <ParticipaBadge participa={p.participa ?? 'SI'} />
+                      <span className="text-gray-700 font-medium">{p.proponente_ganador ?? '—'}</span>
                     </td>
                     <td className="px-4 py-3 text-right whitespace-nowrap font-semibold text-gray-900">
                       {formatCurrency(p.cuantia_proceso)}
                     </td>
                     <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
                       {formatDate(p.fecha_publicacion)}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => setView(p)}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
                     </td>
                   </tr>
                 ))}

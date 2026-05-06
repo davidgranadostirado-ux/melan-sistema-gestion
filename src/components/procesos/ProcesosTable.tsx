@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { StatusBadge, SectorBadge, ParticipaBadge } from '@/components/shared/StatusBadge'
 import { ProcesoFormModal } from './ProcesoFormModal'
 import { ProcesoDetailModal } from './ProcesoDetailModal'
-import { formatCurrency, formatDate, exportToCSV } from '@/lib/utils'
+import { formatCurrency, formatDate, exportToCSV, ganadoPorMelan } from '@/lib/utils'
 import type { Proceso, EstadoProceso } from '@/types'
 import {
   Search, Download, Eye, Pencil, Trash2, ChevronLeft, ChevronRight, Filter, X, Plus,
@@ -76,6 +76,7 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
   // Métricas del resultado filtrado
   const metricasFiltradas = useMemo(() => {
     const participados = filtered.filter((p) => (p.participa ?? 'SI') === 'SI').length
+    const ganadosMelan = filtered.filter((p) => (p.participa ?? 'SI') === 'SI' && ganadoPorMelan(p.proponente_ganador)).length
     return {
       total:        filtered.length,
       adjudicados:  filtered.filter((p) => p.estado_proceso === 'Adjudicado').length,
@@ -84,6 +85,8 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
       participados,
       noParticipados: filtered.length - participados,
       tasaParticipacion: filtered.length > 0 ? Math.round((participados / filtered.length) * 100) : 0,
+      ganadosMelan,
+      tasaExito: participados > 0 ? Math.round((ganadosMelan / participados) * 100) : 0,
     }
   }, [filtered])
 
@@ -158,19 +161,15 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
           small
         />
         <SummaryCard
-          label="No Participados"
-          value={metricasFiltradas.noParticipados}
-          color="rose"
+          label="Ganados por Melan"
+          value={`${metricasFiltradas.ganadosMelan} (${metricasFiltradas.tasaExito}%)`}
+          color="indigo"
           small
         />
         <SummaryCard
-          label="Tasa Adj. / Participados"
-          value={
-            metricasFiltradas.participados > 0
-              ? `${Math.round((metricasFiltradas.adjudicados / metricasFiltradas.participados) * 100)}%`
-              : '—'
-          }
-          color="indigo"
+          label="No Ganados"
+          value={metricasFiltradas.participados - metricasFiltradas.ganadosMelan}
+          color="rose"
           small
         />
       </div>
@@ -292,6 +291,7 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Sector</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">Participación</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Estado</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Ganador</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Cuantía</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Fecha Pub.</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Fecha Cargue</th>
@@ -301,7 +301,7 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
             <tbody className="divide-y divide-gray-50">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-4 py-16 text-center">
+                  <td colSpan={11} className="px-4 py-16 text-center">
                     <div className="text-5xl mb-3">🔍</div>
                     <p className="text-gray-500 font-medium">No se encontraron procesos</p>
                     <p className="text-gray-400 text-sm mt-1">
@@ -351,6 +351,22 @@ export function ProcesosTable({ initialProcesos }: ProcesosTableProps) {
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge estado={proceso.estado_proceso} />
+                    </td>
+                    <td className="px-4 py-3">
+                      {proceso.proponente_ganador ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-sm max-w-[140px] truncate ${ganadoPorMelan(proceso.proponente_ganador) ? 'text-emerald-800 font-semibold' : 'text-gray-700'}`}>
+                            {proceso.proponente_ganador}
+                          </span>
+                          {ganadoPorMelan(proceso.proponente_ganador) && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 flex-shrink-0">
+                              MELAN
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-300 text-xs">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className="font-semibold text-gray-900 whitespace-nowrap">{formatCurrency(proceso.cuantia_proceso)}</span>

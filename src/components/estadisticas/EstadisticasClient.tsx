@@ -7,7 +7,7 @@ import {
 } from 'recharts'
 import type { Proceso, EstadoProceso } from '@/types'
 import { X } from 'lucide-react'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, ganadoPorMelan } from '@/lib/utils'
 
 interface EstadisticasClientProps {
   procesos: Proceso[]
@@ -136,12 +136,12 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
   const cuantiaTotal = filtered.reduce((s, p) => s + (p.cuantia_proceso ?? 0), 0)
   const tasaAdj      = total > 0 ? ((adjudicados / total) * 100).toFixed(1) : '0'
 
-  // Métricas de Participación
+  // Métricas de Participación + Ganados por Melan
   const participados   = filtered.filter((p) => (p.participa ?? 'SI') === 'SI').length
   const noParticipados = total - participados
   const tasaParticip   = total > 0 ? ((participados / total) * 100).toFixed(1) : '0'
-  const adjDeParticip  = filtered.filter((p) => (p.participa ?? 'SI') === 'SI' && p.estado_proceso === 'Adjudicado').length
-  const tasaExito      = participados > 0 ? ((adjDeParticip / participados) * 100).toFixed(1) : '0'
+  const ganadosMelan   = filtered.filter((p) => (p.participa ?? 'SI') === 'SI' && ganadoPorMelan(p.proponente_ganador)).length
+  const tasaExito      = participados > 0 ? ((ganadosMelan / participados) * 100).toFixed(1) : '0'
 
   // KPIs de competencia
   const conParticipantes = filtered.filter((p) => p.cantidad_participantes != null && p.cantidad_participantes > 0)
@@ -166,12 +166,12 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
         <StatCard label="Cancelados / Desiertos"  value={cancelados + desiertos}    color="red"    sub={`${cancelados} cancel. · ${desiertos} desiert.`} />
       </div>
 
-      {/* Tarjetas de Participación */}
+      {/* Tarjetas de Participación + Ganados por Melan */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Participados"      value={`${participados} (${tasaParticip}%)`} color="emerald" sub={`${noParticipados} no participados`} />
-        <StatCard label="No Participados"   value={noParticipados}                        color="rose"    sub="No se presentó oferta" />
-        <StatCard label="Tasa de Éxito"     value={`${tasaExito}%`}                       color="indigo"  sub={`${adjDeParticip} adj. de ${participados} part.`} />
-        <StatCard label="Eficiencia Global" value={participados > 0 ? `${((adjDeParticip / total) * 100).toFixed(1)}%` : '0%'} color="purple" sub="Adjudicados / Total" small />
+        <StatCard label="Participados"     value={`${participados} (${tasaParticip}%)`} color="emerald" sub={`${noParticipados} no participados`} />
+        <StatCard label="Ganados por Melan" value={ganadosMelan}                          color="green"   sub={`${tasaExito}% tasa de éxito`} />
+        <StatCard label="No Ganados"       value={participados - ganadosMelan}             color="rose"    sub="Otros proponentes ganaron" />
+        <StatCard label="Conversión Global" value={total > 0 ? `${((ganadosMelan / total) * 100).toFixed(1)}%` : '0%'} color="purple" sub="Ganados Melan / Total" small />
       </div>
 
       {/* KPIs de competencia */}
