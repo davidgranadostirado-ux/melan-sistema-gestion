@@ -43,7 +43,9 @@ export function StatusBadge({ estado, className }: StatusBadgeProps) {
 export function SectorBadge({ sector }: { sector: string }) {
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-      sector === 'Público' ? 'bg-indigo-100 text-indigo-800' : 'bg-orange-100 text-orange-800'
+      sector === 'Público' ? 'bg-indigo-100 text-indigo-800'
+      : sector === 'Comercial' ? 'bg-teal-100 text-teal-800'
+      : 'bg-orange-100 text-orange-800'
     }`}>
       {sector}
     </span>

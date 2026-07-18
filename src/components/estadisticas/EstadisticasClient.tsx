@@ -212,6 +212,7 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
             <option value="Todos">Todos los sectores</option>
             <option value="Público">Público</option>
             <option value="Privado">Privado</option>
+            <option value="Comercial">Comercial</option>
           </select>
 
           <select value={filterCategoria} onChange={(e) => setFilterCategoria(e.target.value)} className={selectClass}>

@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS public.procesos (
   id                        UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
   -- Clasificación
-  sector                    TEXT NOT NULL CHECK (sector IN ('Público', 'Privado')),
+  sector                    TEXT NOT NULL CHECK (sector IN ('Público', 'Privado', 'Comercial')),
   fuente                    TEXT NOT NULL CHECK (fuente IN ('Secop II', 'Secop I', 'Privado', 'Otro')),
 
   -- Publicación

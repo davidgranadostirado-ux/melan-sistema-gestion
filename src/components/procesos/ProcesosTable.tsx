@@ -19,7 +19,7 @@ interface ProcesosTableProps {
 }
 
 const ESTADOS: EstadoProceso[] = ['En Evaluación', 'Adjudicado', 'Cancelado', 'Desierto', 'Borrador', 'Pendiente', 'Estudio de Mercado', 'A Presentar']
-const SECTORES = ['Público', 'Privado']
+const SECTORES = ['Público', 'Privado', 'Comercial']
 const AÑOS = ['Todos', '2026', '2025', '2024', '2023']
 const PARTICIPACIONES = ['Todos', 'SI', 'NO']
 const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']

@@ -23,7 +23,7 @@ const ESTADO_COLORS: Record<string, string> = {
   'Estudio de Mercado':  '#0891b2',
   'A Presentar':         '#ea580c',
 }
-const SECTOR_COLORS = ['#1a56db', '#059669']
+const SECTOR_COLORS = ['#1a56db', '#059669', '#0d9488']
 const MESES_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const MESES_FULL  = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
 const ESTADOS: EstadoProceso[] = ['En Evaluación','Adjudicado','Cancelado','Desierto','Borrador','Pendiente','Estudio de Mercado','A Presentar']
@@ -160,6 +160,7 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
           <option value="Todos">Todos los sectores</option>
           <option value="Público">Público</option>
           <option value="Privado">Privado</option>
+          <option value="Comercial">Comercial</option>
         </select>
 
         <select value={filterCategoria} onChange={(e) => setFilterCategoria(e.target.value)} className={selectClass}>

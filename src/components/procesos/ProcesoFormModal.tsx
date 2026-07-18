@@ -179,6 +179,7 @@ export function ProcesoFormModal({ open, onClose, proceso, onSuccess }: ProcesoF
                   <SelectContent>
                     <SelectItem value="Público">Público</SelectItem>
                     <SelectItem value="Privado">Privado</SelectItem>
+                    <SelectItem value="Comercial">Comercial</SelectItem>
                   </SelectContent>
                 </Select>
               </Field>

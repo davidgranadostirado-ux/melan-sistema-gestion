@@ -17,7 +17,7 @@ interface ComparativoClientProps {
 
 const MESES_FULL  = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
 const MESES_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-const SECTORES    = ['Público', 'Privado']
+const SECTORES    = ['Público', 'Privado', 'Comercial']
 
 const selectClass =
   'h-9 px-3 text-sm border border-gray-200 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500'

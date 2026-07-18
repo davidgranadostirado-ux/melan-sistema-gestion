@@ -10,7 +10,7 @@ export interface Profile {
   updated_at: string
 }
 
-export type Sector = 'Público' | 'Privado'
+export type Sector = 'Público' | 'Privado' | 'Comercial'
 export type Fuente = 'Secop II' | 'Secop I' | 'Privado' | 'Otro'
 export type EstadoProceso =
   | 'En Evaluación'
