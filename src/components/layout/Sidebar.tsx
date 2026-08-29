@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, FileText, Award, BarChart3, Users, LogOut, X, Menu, Target,
+  LayoutDashboard, FileText, Award, BarChart3, LogOut, X, Menu, Target,
+  Wallet, FileCheck2, Network,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -17,7 +18,10 @@ const navItems = [
   { href: '/adjudicados', label: 'Adjudicados', icon: Award },
   { href: '/comparativo', label: 'Participados vs Adjudicados', icon: Target },
   { href: '/estadisticas', label: 'Estadísticas', icon: BarChart3 },
-  { href: '/usuarios', label: 'Gestión de Usuarios', icon: Users },
+  { href: '/finanzas', label: 'Ingresos y Gastos', icon: Wallet },
+  { href: '/perfil-documental', label: 'Perfil Documental', icon: FileCheck2 },
+  { href: '/homologacion', label: 'Homologación', icon: Network },
+  // 'Gestión de Usuarios' vive ahora en el menú del perfil (Topbar)
 ]
 
 interface SidebarProps {
@@ -39,7 +43,7 @@ export function Sidebar({ userProfile }: SidebarProps) {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="px-6 py-5 border-b border-white/10">
-        <div className="bg-white rounded-xl px-3 py-2.5 flex items-center justify-center">
+        <div className="bg-solid-white rounded-xl px-3 py-2.5 flex items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo-melan.svg"

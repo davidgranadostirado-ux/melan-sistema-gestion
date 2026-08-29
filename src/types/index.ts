@@ -1,6 +1,7 @@
 export type UserRole = 'admin' | 'editor' | 'viewer'
 
 export interface Profile {
+  ver_credenciales?: boolean
   id: string
   email: string
   full_name: string
@@ -85,4 +86,124 @@ export interface MonthlyDataPoint {
   mes: string
   procesos: number
   adjudicados: number
+}
+
+// ============================================================
+// MÓDULO: Ingresos y Gastos
+// ============================================================
+
+export interface CategoriaGasto {
+  id: string
+  nombre: string
+  activo: boolean
+  created_at: string
+  created_by?: string
+}
+
+export interface Gasto {
+  id: string
+  fecha: string
+  proveedor: string
+  categoria: string
+  descripcion?: string
+  valor: number
+  iva_pct: number
+  iva: number
+  total: number
+  proceso_id?: string | null
+  observaciones?: string
+  created_by?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Venta {
+  id: string
+  fecha: string
+  cliente: string
+  descripcion: string
+  numero_factura?: string
+  valor: number
+  iva_pct: number
+  iva: number
+  total: number
+  proceso_id?: string | null
+  observaciones?: string
+  created_by?: string
+  created_at: string
+  updated_at: string
+}
+
+export type GastoFormData = Omit<Gasto, 'id' | 'total' | 'created_at' | 'updated_at' | 'created_by'>
+export type VentaFormData = Omit<Venta, 'id' | 'total' | 'created_at' | 'updated_at' | 'created_by'>
+
+// ============================================================
+// MÓDULO: Perfil Documental
+// ============================================================
+
+export interface PerfilDocumento {
+  id: string
+  documento: string
+  aplica: boolean
+  no_aplica: boolean
+  lo_tiene: boolean
+  no_lo_tiene: boolean
+  fecha_documento?: string | null
+  fecha_vencimiento?: string | null
+  archivo_path?: string | null
+  archivo_nombre?: string | null
+  orden: number
+  created_by?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface DocumentoArchivo {
+  id: string
+  documento_id: string
+  storage_path: string
+  nombre?: string | null
+  uploaded_by?: string | null
+  uploaded_at: string
+}
+
+// ============================================================
+// MÓDULO: Homologación de Plataformas
+// ============================================================
+
+export interface HomologacionEstado {
+  id: string
+  nombre: string
+  orden: number
+  activo: boolean
+  created_at?: string
+}
+
+export interface HomologacionPlataforma {
+  id: string
+  plataforma: string
+  acceso?: string | null
+  estado?: string | null
+  orden: number
+  created_by?: string | null
+  created_at: string
+  updated_at: string
+  // Solo presentes si el usuario tiene permiso para ver credenciales
+  usuario?: string | null
+  contrasena?: string | null
+}
+
+/** Fila unificada para la tabla de movimientos */
+export type TipoMovimiento = 'Ingreso' | 'Gasto'
+
+export interface Movimiento {
+  id: string
+  tipo: TipoMovimiento
+  fecha: string
+  tercero: string          // proveedor (gasto) o cliente (venta)
+  concepto: string         // categoría (gasto) o descripción (venta)
+  valor: number
+  iva: number
+  total: number
+  observaciones?: string
 }

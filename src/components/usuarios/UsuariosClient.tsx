@@ -33,6 +33,7 @@ export function UsuariosClient({ usuarios: initialUsuarios }: UsuariosClientProp
   const [showPass, setShowPass]     = useState(false)
 
   // Editar
+  const [newVerCred, setNewVerCred] = useState(false)
   const [editUser, setEditUser]   = useState<Profile | null>(null)
   const [newName, setNewName]     = useState('')
   const [newRole, setNewRole]     = useState<UserRole>('viewer')
@@ -77,7 +78,7 @@ export function UsuariosClient({ usuarios: initialUsuarios }: UsuariosClientProp
 
   // ── Editar ──────────────────────────────────────────────
   const handleEdit = (user: Profile) => {
-    setEditUser(user); setNewName(user.full_name); setNewRole(user.role)
+    setEditUser(user); setNewName(user.full_name); setNewRole(user.role); setNewVerCred(user.ver_credenciales ?? false)
   }
 
   const handleSave = async () => {
@@ -87,11 +88,11 @@ export function UsuariosClient({ usuarios: initialUsuarios }: UsuariosClientProp
     const supabase = createClient()
     const { error } = await supabase
       .from('profiles')
-      .update({ full_name: newName, role: newRole, updated_at: new Date().toISOString() })
+      .update({ full_name: newName, role: newRole, ver_credenciales: newVerCred, updated_at: new Date().toISOString() })
       .eq('id', editUser.id)
     setLoading(false)
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return }
-    setUsuarios((prev) => prev.map((u) => u.id === editUser.id ? { ...u, full_name: newName, role: newRole } : u))
+    setUsuarios((prev) => prev.map((u) => u.id === editUser.id ? { ...u, full_name: newName, role: newRole, ver_credenciales: newVerCred } : u))
     toast({ title: 'Usuario actualizado', description: `${newName} fue actualizado.` })
     setEditUser(null)
   }
@@ -296,6 +297,21 @@ export function UsuariosClient({ usuarios: initialUsuarios }: UsuariosClientProp
                   <SelectItem value="viewer">Visor — solo lectura</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Ver credenciales de plataformas</Label>
+              <Select value={newVerCred ? 'si' : 'no'} onValueChange={(v) => setNewVerCred(v === 'si')} disabled={newRole === 'admin'}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="si">Sí — puede ver usuario y contraseña</SelectItem>
+                  <SelectItem value="no">No — no ve las credenciales</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500">
+                {newRole === 'admin'
+                  ? 'Los administradores siempre ven las credenciales.'
+                  : 'Controla si este usuario ve las columnas Usuario y Contraseña en Homologación.'}
+              </p>
             </div>
           </div>
           <DialogFooter>

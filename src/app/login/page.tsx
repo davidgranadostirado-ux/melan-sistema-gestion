@@ -59,7 +59,7 @@ export default function LoginPage() {
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-800 to-blue-600 px-8 py-10 text-center">
             <div className="flex items-center justify-center mb-4">
-              <div className="bg-white rounded-xl px-5 py-3">
+              <div className="bg-solid-white rounded-xl px-5 py-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/logo-melan.svg"
