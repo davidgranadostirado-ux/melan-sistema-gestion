@@ -14,16 +14,16 @@ interface EstadisticasClientProps {
 }
 
 const ESTADO_COLORS: Record<string, string> = {
-  'Adjudicado':          '#059669',
-  'En Evaluación':       '#d97706',
-  'Cancelado':           '#dc2626',
-  'Desierto':            '#6b7280',
-  'Borrador':            '#7c3aed',
-  'Pendiente':           '#1a56db',
-  'Estudio de Mercado':  '#0891b2',
-  'A Presentar':         '#ea580c',
+  'Adjudicado':          '#1E7A4B',
+  'En Evaluación':       '#F6862B',
+  'Cancelado':           '#D2453F',
+  'Desierto':            '#BBBDC0',
+  'Borrador':            '#485E88',
+  'Pendiente':           '#12315E',
+  'Estudio de Mercado':  '#245891',
+  'A Presentar':         '#EF6222',
 }
-const FUENTE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4']
+const FUENTE_COLORS = ['#12315E', '#F6862B', '#245891', '#1E7A4B', '#485E88', '#EF6222']
 const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
 const ESTADOS: EstadoProceso[] = ['En Evaluación','Adjudicado','Cancelado','Desierto','Borrador','Pendiente','Estudio de Mercado','A Presentar']
 const CATEGORIAS = ['INSUMOS DE ASEO','INSUMOS DE ASEO Y CAFETERIA','INSUMOS DE CAFETERIA','INSUMOS DE PAPELERÍA','INSUMOS DE PROTECCION PERSONAL','INSUMOS DEPORTIVOS','INSUMOS LUDICOS','SUMINISTRO DE ASEO','SUMINISTRO DE FERRETERÍA','SUMINISTRO DE HIGIENE','SUMINISTRO DE MERCADOS','SUMINISTRO DE TECNOLOGÍA','SUMINISTRO MOBILIARIO']
@@ -64,7 +64,7 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
       acc[p.estado_proceso] = (acc[p.estado_proceso] || 0) + 1
       return acc
     }, {})
-  ).map(([name, value]) => ({ name, value, fill: ESTADO_COLORS[name] ?? '#94a3b8' }))
+  ).map(([name, value]) => ({ name, value, fill: ESTADO_COLORS[name] ?? '#BBBDC0' }))
 
   // Por fuente
   const fuenteData = Object.entries(
@@ -246,7 +246,7 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
           {estadoData.length === 0 ? <EmptyChart /> : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={estadoData} barSize={40}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E3E8EF" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip formatter={(v: number) => [v, 'Procesos']} />
@@ -279,12 +279,12 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
                 </Pie>
                 <Tooltip
                   formatter={(v: number, name: string) => [v, name]}
-                  contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px' }}
+                  contentStyle={{ borderRadius: '8px', border: '1px solid #E3E8EF', fontSize: '13px' }}
                 />
                 <Legend
                   iconType="circle"
                   iconSize={10}
-                  formatter={(value) => <span style={{ fontSize: '12px', color: '#374151' }}>{value}</span>}
+                  formatter={(value) => <span style={{ fontSize: '12px', color: '#1B2A41' }}>{value}</span>}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -297,11 +297,11 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
           {categoriaData.length === 0 ? <EmptyChart /> : (
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={categoriaData} layout="vertical" barSize={18}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E3E8EF" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
                 <YAxis type="category" dataKey="name" width={200} tick={{ fontSize: 10 }} />
                 <Tooltip formatter={(v: number) => [v, 'Procesos']} />
-                <Bar dataKey="value" name="Procesos" fill="#7c3aed" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="value" name="Procesos" fill="#485E88" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -313,11 +313,11 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
           {depData.length === 0 ? <EmptyChart /> : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={depData} layout="vertical" barSize={20}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E3E8EF" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
                 <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 10 }} />
                 <Tooltip formatter={(v: number) => [v, 'Procesos']} />
-                <Bar dataKey="value" name="Procesos" fill="#1a56db" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="value" name="Procesos" fill="#12315E" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -329,11 +329,11 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
           {añoData.length === 0 ? <EmptyChart /> : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={añoData} barSize={60}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E3E8EF" />
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                 <Tooltip formatter={(v: number) => [v, 'Procesos']} />
-                <Bar dataKey="value" name="Procesos" fill="#059669" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" name="Procesos" fill="#1E7A4B" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -346,11 +346,11 @@ export function EstadisticasClient({ procesos }: EstadisticasClientProps) {
             <p className="text-xs text-gray-500 mb-4">Posición final obtenida en cada proceso evaluado</p>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={posicionData} barSize={40}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E3E8EF" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip formatter={(v: number) => [v, 'Procesos']} />
-                <Bar dataKey="value" name="Procesos" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" name="Procesos" fill="#F9A860" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

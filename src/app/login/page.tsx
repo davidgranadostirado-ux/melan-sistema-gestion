@@ -62,7 +62,7 @@ export default function LoginPage() {
               <div className="bg-white rounded-xl px-5 py-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="https://www.melanservices.com/web/images/logo.svg"
+                  src="/logo-melan.svg"
                   alt="Melan Services"
                   className="h-10 w-auto object-contain"
                 />
@@ -118,7 +118,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+                className="w-full h-11 bg-brand hover:bg-brand-soft text-navy-deep font-bold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
               >
                 {loading ? (
                   <>

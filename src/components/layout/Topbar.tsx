@@ -42,7 +42,7 @@ export function Topbar({ userProfile }: TopbarProps) {
               // Dispatch evento para abrir modal de nuevo proceso
               window.dispatchEvent(new CustomEvent('open-nuevo-proceso'))
             }}
-            className="bg-blue-700 hover:bg-blue-800 text-white gap-2 hidden sm:flex"
+            className="bg-brand hover:bg-brand-soft text-navy-deep font-semibold gap-2 hidden sm:flex"
           >
             <Plus className="h-4 w-4" />
             Nuevo Proceso

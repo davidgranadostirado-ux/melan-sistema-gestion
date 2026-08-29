@@ -14,16 +14,18 @@ interface ChartsSectionProps {
 }
 
 const ESTADO_COLORS: Record<string, string> = {
-  'En Evaluación':       '#d97706',
-  'Adjudicado':          '#059669',
-  'Cancelado':           '#dc2626',
-  'Desierto':            '#6b7280',
-  'Borrador':            '#7c3aed',
-  'Pendiente':           '#1a56db',
-  'Estudio de Mercado':  '#0891b2',
-  'A Presentar':         '#ea580c',
+  'En Evaluación':       '#F6862B',
+  'Adjudicado':          '#1E7A4B',
+  'Cancelado':           '#D2453F',
+  'Desierto':            '#BBBDC0',
+  'Borrador':            '#485E88',
+  'Pendiente':           '#12315E',
+  'Estudio de Mercado':  '#245891',
+  'A Presentar':         '#EF6222',
 }
-const SECTOR_COLORS = ['#1a56db', '#059669', '#0d9488']
+// Por nombre, no por posición: así el color del sector no cambia si cambia el orden de los datos
+const SECTOR_COLORS: Record<string, string> = { 'Público': '#F6862B', 'Privado': '#245891', 'Comercial': '#12315E' }
+const SECTOR_FALLBACK = ['#485E88', '#EF6222', '#1E7A4B']
 const MESES_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const MESES_FULL  = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
 const ESTADOS: EstadoProceso[] = ['En Evaluación','Adjudicado','Cancelado','Desierto','Borrador','Pendiente','Estudio de Mercado','A Presentar']
@@ -80,7 +82,7 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
     filtered.reduce<Record<string, number>>((acc, p) => {
       acc[p.estado_proceso] = (acc[p.estado_proceso] || 0) + 1; return acc
     }, {})
-  ).map(([name, value]) => ({ name, value, fill: ESTADO_COLORS[name] ?? '#94a3b8' }))
+  ).map(([name, value]) => ({ name, value, fill: ESTADO_COLORS[name] ?? '#BBBDC0' }))
 
   // 2. Por Sector
   const sectorData = Object.entries(
@@ -198,7 +200,7 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
         <DashCard label="Participados" value={`${participadosF} (${tasaParticipF}%)`} sub={`${noParticipadosF} no participados`} color="emerald" />
         <DashCard label="Ganados por Melan" value={ganadosMelanF} sub={`${tasaExitoF}% tasa de éxito`} color="green" />
         <DashCard label="No Ganados" value={participadosF - ganadosMelanF} sub="Adjudicados a otros / en juego" color="rose" />
-        <DashCard label="Adjudicados (Total)" value={`${adjudicadosF} (${tasaAdjF}%)`} sub="Cualquier ganador" color="indigo" />
+        <DashCard label="Adjudicados (Total)" value={`${adjudicadosF} (${tasaAdjF}%)`} sub="Cualquier ganador" color="cyan" />
       </div>
 
       {/* KPIs de competencia */}
@@ -221,7 +223,7 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
           {estadoData.length === 0 ? <EmptyChart /> : (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={estadoData} barSize={36}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E3E8EF" />
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                 <Tooltip content={<CustomTooltip />} />
@@ -240,7 +242,7 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie data={sectorData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={3} dataKey="value">
-                  {sectorData.map((_, i) => <Cell key={i} fill={SECTOR_COLORS[i % SECTOR_COLORS.length]} />)}
+                  {sectorData.map((d, i) => <Cell key={i} fill={SECTOR_COLORS[d.name] ?? SECTOR_FALLBACK[i % SECTOR_FALLBACK.length]} />)}
                 </Pie>
                 <Tooltip formatter={(v: number) => [v, 'Procesos']} />
                 <Legend formatter={(value) => <span className="text-sm text-gray-700">{value}</span>} />
@@ -255,13 +257,13 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
           <p className="text-xs text-gray-500 mb-4">Año {yearForChart}</p>
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E3E8EF" />
               <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
-              <Line type="monotone" dataKey="procesos" name="Total" stroke="#1a56db" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="adjudicados" name="Adjudicados" stroke="#059669" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="procesos" name="Total" stroke="#12315E" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="adjudicados" name="Adjudicados" stroke="#1E7A4B" strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -272,11 +274,11 @@ export function ChartsSection({ procesos }: ChartsSectionProps) {
           {topEntidades.length === 0 ? <EmptyChart /> : (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={topEntidades} layout="vertical" barSize={18}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E3E8EF" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
                 <YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 10 }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" name="Procesos" fill="#1a56db" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="value" name="Procesos" fill="#12315E" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -308,6 +310,7 @@ function DashCard({ label, value, sub, color, small }: {
     indigo: 'bg-indigo-50 border-indigo-100 text-indigo-900',
     emerald:'bg-emerald-50 border-emerald-100 text-emerald-900',
     rose:   'bg-rose-50 border-rose-100 text-rose-900',
+    cyan:   'bg-cyan-50 border-cyan-100 text-cyan-900',
   }
   return (
     <div className={`rounded-xl border p-4 ${colors[color]}`}>

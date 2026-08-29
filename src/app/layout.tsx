@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'MELAN Services - Sistema de Gestión de Licitaciones',
   description: 'Sistema profesional de gestión de procesos de licitación',
+  icons: { icon: '/logo-melan.svg' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

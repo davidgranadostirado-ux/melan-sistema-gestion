@@ -78,22 +78,22 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
 
   // 1. Funnel comparativo
   const funnelData = [
-    { name: 'Total Procesos',        value: total,                  fill: '#3b82f6' },
-    { name: 'Participados',          value: participados.length,    fill: '#10b981' },
-    { name: 'Ganados por Melan',     value: ganadosMelan.length,    fill: '#059669' },
+    { name: 'Total Procesos',        value: total,                  fill: '#12315E' },
+    { name: 'Participados',          value: participados.length,    fill: '#245891' },
+    { name: 'Ganados por Melan',     value: ganadosMelan.length,    fill: '#1E7A4B' },
   ]
 
   // 2. Donut Participados vs No
   const participacionData = [
-    { name: 'Participó',     value: participados.length,    fill: '#10b981' },
-    { name: 'No participó',  value: noParticipados.length,  fill: '#f43f5e' },
+    { name: 'Participó',     value: participados.length,    fill: '#245891' },
+    { name: 'No participó',  value: noParticipados.length,  fill: '#BBBDC0' },
   ]
 
   // 3. Donut Resultado de Participados
   const resultadoParticipData = [
-    { name: 'Ganados por Melan', value: ganadosMelan.length,     fill: '#059669' },
-    { name: 'Perdidos',          value: perdidosMelan.length,    fill: '#dc2626' },
-    { name: 'En Juego',          value: enJuegoMelan.length,     fill: '#d97706' },
+    { name: 'Ganados por Melan', value: ganadosMelan.length,     fill: '#1E7A4B' },
+    { name: 'Perdidos',          value: perdidosMelan.length,    fill: '#D2453F' },
+    { name: 'En Juego',          value: enJuegoMelan.length,     fill: '#F6862B' },
   ].filter((d) => d.value > 0)
 
   // 4. Mensual: Participados vs Ganados
@@ -228,7 +228,7 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
 
       {/* ─── KPIs SECUNDARIOS ─── */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <KpiCard label="Adjudicados a Otros" value={adjudicadosOtros.length} sub="Ganó otra empresa" color="rose" />
+        <KpiCard label="Adjudicados a Otros" value={adjudicadosOtros.length} sub="Ganó otra empresa" color="neutro" />
         <KpiCard label="Perdidos por Melan" value={perdidosMelan.length} sub={`${tasaPerdida}% de los participados`} color="red" />
         <KpiCard label="Cuantía Participada" value={formatCurrency(cuantiaParticip)} sub="Total cuantía donde Melan se presentó" color="blue" small />
         <KpiCard
@@ -248,7 +248,7 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
           {funnelData.every((d) => d.value === 0) ? <Empty /> : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={funnelData} layout="vertical" barSize={32}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E3E8EF" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
                 <YAxis type="category" dataKey="name" width={150} tick={{ fontSize: 11 }} />
                 <Tooltip formatter={(v: number) => [v, 'Procesos']} />
@@ -321,14 +321,14 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
           {sectorComparativo.every((s) => s.Total === 0) ? <Empty /> : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={sectorComparativo} barSize={28}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E3E8EF" />
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="Total"           fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Participados"    fill="#10b981" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Ganados Melan"   fill="#059669" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Total"           fill="#12315E" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Participados"    fill="#245891" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Ganados Melan"   fill="#1E7A4B" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -340,15 +340,15 @@ export function ComparativoClient({ procesos }: ComparativoClientProps) {
           <p className="text-xs text-gray-500 mb-4">Participados, Ganados por Melan y Adjudicados a otros</p>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={mensualData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E3E8EF" />
               <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="participados"      name="Participados"        stroke="#10b981" strokeWidth={2.5} dot={{ r: 4 }} />
-              <Line type="monotone" dataKey="ganados"           name="Ganados Melan"       stroke="#059669" strokeWidth={2.5} dot={{ r: 4 }} />
-              <Line type="monotone" dataKey="adjudicadosOtros"  name="Adjudicados a otros" stroke="#dc2626" strokeWidth={2}   dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="noParticipados"    name="No Participados"     stroke="#f43f5e" strokeWidth={2}   dot={{ r: 3 }} strokeDasharray="5 5" />
+              <Line type="monotone" dataKey="participados"      name="Participados"        stroke="#245891" strokeWidth={2.5} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="ganados"           name="Ganados Melan"       stroke="#1E7A4B" strokeWidth={2.5} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="adjudicadosOtros"  name="Adjudicados a otros" stroke="#D2453F" strokeWidth={2}   dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="noParticipados"    name="No Participados"     stroke="#BBBDC0" strokeWidth={2}   dot={{ r: 3 }} strokeDasharray="5 5" />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -633,6 +633,7 @@ function KpiCard({ label, value, sub, color, small }: {
     indigo:  'bg-indigo-50 border-indigo-100 text-indigo-900',
     rose:    'bg-rose-50 border-rose-100 text-rose-900',
     red:     'bg-red-50 border-red-100 text-red-900',
+    neutro:  'bg-purple-50 border-purple-100 text-purple-900',
     emerald: 'bg-emerald-50 border-emerald-100 text-emerald-900',
   }
   return (
