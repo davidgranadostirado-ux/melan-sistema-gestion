@@ -23,6 +23,26 @@ import type { HomologacionPlataforma, HomologacionEstado } from '@/types'
 function esUrl(s?: string | null) {
   return !!s && /^https?:\/\//i.test(s.trim())
 }
+
+/**
+ * Etiqueta corta para la columna Acceso.
+ * En vez de la URL completa (que nunca cabe y se corta en "ht…"),
+ * muestra el dominio: "co.bionexo.com". La URL entera queda en el
+ * tooltip y en el enlace.
+ */
+function etiquetaAcceso(s?: string | null) {
+  if (!s) return '—'
+  const texto = s.trim()
+  if (!esUrl(texto)) return texto
+  try {
+    const { hostname, pathname } = new URL(texto)
+    const dominio = hostname.replace(/^www\./i, '')
+    const primerTramo = pathname.split('/').filter(Boolean)[0]
+    return primerTramo ? `${dominio}/${primerTramo}` : dominio
+  } catch {
+    return texto
+  }
+}
 function estadoCls(nombre?: string | null) {
   const n = (nombre ?? '').toLowerCase()
   if (n === 'existente') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400'
@@ -207,16 +227,26 @@ export function HomologacionClient({ initialPlataformas, initialEstados, puedeEd
             ) : plataformas.map((p) => (
               <tr key={p.id} className="border-b border-gray-100 last:border-0 dark:border-gray-700/60">
                 <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{p.plataforma}</td>
-                <td className="px-4 py-3 max-w-0 w-[240px]">
-                  <div className="flex items-center gap-1 max-w-[240px]">
-                    {esUrl(p.acceso) && <ExternalLink className="h-3.5 w-3.5 flex-shrink-0 text-primary" />}
-                    <span className="truncate min-w-0" title={p.acceso ?? undefined}>
-                      {esUrl(p.acceso) ? (
-                        <a href={p.acceso!} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{p.acceso}</a>
-                      ) : (
-                        <span className="text-gray-500 dark:text-gray-400">{p.acceso || '—'}</span>
-                      )}
-                    </span>
+                <td className="px-4 py-3 w-[240px]">
+                  <div className="flex items-center gap-1.5 w-[240px]">
+                    {esUrl(p.acceso) && (
+                      <ExternalLink className="h-3.5 w-3.5 flex-shrink-0 text-navy-mid dark:text-blue-300" />
+                    )}
+                    {esUrl(p.acceso) ? (
+                      <a
+                        href={p.acceso!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={p.acceso ?? undefined}
+                        className="truncate min-w-0 text-navy-mid dark:text-blue-300 hover:underline"
+                      >
+                        {etiquetaAcceso(p.acceso)}
+                      </a>
+                    ) : (
+                      <span className="truncate min-w-0 text-gray-500 dark:text-gray-400" title={p.acceso ?? undefined}>
+                        {p.acceso || '—'}
+                      </span>
+                    )}
                   </div>
                 </td>
                 <td className="px-4 py-3">
