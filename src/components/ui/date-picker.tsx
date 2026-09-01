@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
+import { useState, useRef } from 'react'
 import { Calendar as CalIcon, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -20,34 +19,32 @@ interface Props {
   placeholder?: string
 }
 
+// Nota: el calendario se renderiza ANCLADO al campo (position: absolute),
+// no en un portal a <body>. Dentro de un Dialog de Radix (modal), todo lo
+// portaleado fuera del contenido queda bloqueado (pointer-events: none),
+// que era la causa de que no se pudieran seleccionar fechas.
 export function DatePicker({ value, onChange, placeholder = 'Seleccionar fecha' }: Props) {
   const [open, setOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  const [arriba, setArriba] = useState(false)
+  const [derecha, setDerecha] = useState(false)
   const btnRef = useRef<HTMLButtonElement>(null)
-  const [pos, setPos] = useState({ top: 0, left: 0 })
 
   const base = value ? new Date(value + 'T00:00:00') : new Date()
   const [viewYear, setViewYear] = useState(base.getFullYear())
   const [viewMonth, setViewMonth] = useState(base.getMonth())
 
-  useEffect(() => setMounted(true), [])
-
-  useEffect(() => {
-    if (open && value) {
-      const d = new Date(value + 'T00:00:00')
+  const abrir = () => {
+    if (!open) {
+      // sincronizar el mes mostrado con el valor actual
+      const d = value ? new Date(value + 'T00:00:00') : new Date()
       setViewYear(d.getFullYear())
       setViewMonth(d.getMonth())
-    }
-  }, [open, value])
-
-  const abrir = () => {
-    if (!open && btnRef.current) {
-      const r = btnRef.current.getBoundingClientRect()
-      const calH = 330, calW = 288
-      const abajo = window.innerHeight - r.bottom > calH || r.top < calH
-      const top = abajo ? r.bottom + 4 : Math.max(8, r.top - calH - 4)
-      const left = Math.min(r.left, window.innerWidth - calW - 8)
-      setPos({ top, left: Math.max(8, left) })
+      // decidir hacia dónde desplegar según el espacio disponible
+      if (btnRef.current) {
+        const r = btnRef.current.getBoundingClientRect()
+        setArriba(window.innerHeight - r.bottom < 340 && r.top > 340)
+        setDerecha(r.left + 288 > window.innerWidth - 8)
+      }
     }
     setOpen((v) => !v)
   }
@@ -67,70 +64,8 @@ export function DatePicker({ value, onChange, placeholder = 'Seleccionar fecha' 
   const prevMes = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1) } else setViewMonth((m) => m - 1) }
   const nextMes = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1) } else setViewMonth((m) => m + 1) }
 
-  const calendario = (
-    <>
-      <div className="fixed inset-0 z-[60]" onClick={() => setOpen(false)} />
-      <div
-        className="fixed z-[61] w-72 rounded-xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-gray-700 dark:bg-gray-800"
-        style={{ top: pos.top, left: pos.left }}
-      >
-        <div className="flex items-center justify-between mb-2">
-          <button type="button" onClick={prevMes} className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{MESES[viewMonth]} {viewYear}</span>
-          <button type="button" onClick={nextMes} className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-7 gap-1 mb-1">
-          {DIAS.map((d) => (
-            <div key={d} className="text-center text-[11px] font-medium text-gray-400">{d}</div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-7 gap-1">
-          {cells.map((d, i) => {
-            if (d === null) return <div key={i} />
-            const s = fmt(viewYear, viewMonth, d)
-            const sel = s === value
-            const esHoy = s === hoyStr
-            return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => { onChange(s); setOpen(false) }}
-                className={cn(
-                  'h-8 w-8 rounded-full text-sm flex items-center justify-center transition-colors',
-                  sel
-                    ? 'bg-primary text-white font-semibold'
-                    : 'text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-500/10',
-                  !sel && esHoy && 'ring-1 ring-primary text-primary font-semibold',
-                )}
-              >
-                {d}
-              </button>
-            )
-          })}
-        </div>
-
-        <div className="flex justify-between mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-          <button type="button" onClick={() => { onChange(hoyStr); setOpen(false) }} className="text-xs font-medium text-primary hover:underline">
-            Hoy
-          </button>
-          {value && (
-            <button type="button" onClick={() => { onChange(''); setOpen(false) }} className="text-xs text-gray-400 hover:underline">
-              Limpiar
-            </button>
-          )}
-        </div>
-      </div>
-    </>
-  )
-
   return (
-    <>
+    <div className="relative">
       <button
         ref={btnRef}
         type="button"
@@ -140,7 +75,71 @@ export function DatePicker({ value, onChange, placeholder = 'Seleccionar fecha' 
         <span className={cn('truncate', !display && 'text-muted-foreground')}>{display || placeholder}</span>
         <CalIcon className="h-4 w-4 text-primary flex-shrink-0" />
       </button>
-      {open && mounted && createPortal(calendario, document.body)}
-    </>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-[60]" onClick={() => setOpen(false)} />
+          <div
+            className={cn(
+              'absolute z-[61] w-72 rounded-xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-gray-700 dark:bg-gray-800',
+              arriba ? 'bottom-full mb-1' : 'top-full mt-1',
+              derecha ? 'right-0' : 'left-0',
+            )}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <button type="button" onClick={prevMes} className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{MESES[viewMonth]} {viewYear}</span>
+              <button type="button" onClick={nextMes} className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-7 gap-1 mb-1">
+              {DIAS.map((d) => (
+                <div key={d} className="text-center text-[11px] font-medium text-gray-400">{d}</div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-1">
+              {cells.map((d, i) => {
+                if (d === null) return <div key={i} />
+                const s = fmt(viewYear, viewMonth, d)
+                const sel = s === value
+                const esHoy = s === hoyStr
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => { onChange(s); setOpen(false) }}
+                    className={cn(
+                      'h-8 w-8 rounded-full text-sm flex items-center justify-center transition-colors',
+                      sel
+                        ? 'bg-primary text-white font-semibold'
+                        : 'text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-500/10',
+                      !sel && esHoy && 'ring-1 ring-primary text-primary font-semibold',
+                    )}
+                  >
+                    {d}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="flex justify-between mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+              <button type="button" onClick={() => { onChange(hoyStr); setOpen(false) }} className="text-xs font-medium text-primary hover:underline">
+                Hoy
+              </button>
+              {value && (
+                <button type="button" onClick={() => { onChange(''); setOpen(false) }} className="text-xs text-gray-400 hover:underline">
+                  Limpiar
+                </button>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   )
 }
